@@ -21,6 +21,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import path from "path";
 
 export function Navbar({ children }: { children: React.ReactNode }) {
     return (
@@ -52,13 +53,9 @@ export function NavLink(
     return (
         <Link
             {...props}
-            // className={cn(
-            //     "p-4 hover:bg-primary-foreground hover:text-secondary-foreground focus-visible:bg-secondary focus-visible:text-secondary-foreground",
-            //     pathName === props.href ? "bg-background text-foreground" : ""
-            // )}
             className={cn(
                 "text-muted-foreground transition-colors hover:text-foreground",
-                pathName === props.href ? "text-foreground" : ""
+                pathName.startsWith(props.href.toString()) ? "text-foreground" : ""
             )}
         />
     );
