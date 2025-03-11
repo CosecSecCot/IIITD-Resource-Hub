@@ -1,40 +1,69 @@
-import CommentSection from "@/components/comment-section"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import CommentSection from "@/components/comment-section";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import comments from "@/data/comments";
+import commentOnResource from "@/data/comments-on-resource";
+import resources from "@/data/resources";
+import users from "@/data/users";
+import { notFound } from "next/navigation";
 
 export default async function Page({
-    params,
+  params,
 }: {
-    params: Promise<{ resourceID: string }>
+  params: Promise<{ resourceID: number }>;
 }) {
-    const { resourceID } = await params
-    return <div>
-        <main className="md:max-w-[765px] w-full mx-auto px-10 mt-10 mb-20 space-y-6">
-            <div className="flex gap-2 items-center">
-                <Avatar className="w-[48px] h-[48px]">
-                    <AvatarImage src="https://avatars.githubusercontent.com/u/126417139?v=4" />
-                    <AvatarFallback>CSC</AvatarFallback>
-                </Avatar>
-                <span>{"CosecSecCot"}</span>
-            </div>
-            <h1 className="text-5xl font-bold">Resouce Name</h1>
-            <p className="">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat nobis saepe illo delectus vel cumque pariatur aspernatur laudantium facilis est minima reiciendis magni facere voluptatibus, suscipit nisi numquam explicabo?
-            </p>
-            <div className="flex gap-2 flex-wrap">
-                <Badge>{"NOTES"}</Badge>
-                {["Networks", "Computer Science", "Study"].map((tag, index) => {
-                    return <Badge key={index} variant="secondary">{tag}</Badge>
-                })}
-            </div>
-            <div className="w-full flex gap-6 flex-wrap">
-                <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-                <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-                <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-            </div>
-            <CommentSection />
-        </main>
+  const { resourceID } = await params;
+
+  const resource = resources.find((res) => res.resourceID == resourceID);
+  if (!resource) {
+    notFound();
+  }
+  const user = users.find((user) => user.userID === resource.userID);
+  if (!user) {
+    notFound();
+  }
+  const currentComments = commentOnResource
+    .filter((comment) => comment.resourceID == resourceID)
+    .map(({ commentID }) => comments.find((cmt) => cmt.commentID == commentID))
+    .filter((comment) => comment != undefined);
+
+  if (!user) {
+    notFound();
+  }
+
+  return (
+    <div>
+      <main className="md:max-w-[765px] w-full mx-auto px-10 mt-10 mb-20 space-y-6">
+        <div className="flex gap-2 items-center">
+          <Avatar className="w-[48px] h-[48px]">
+            <AvatarImage src="" />
+            <AvatarFallback>
+              {user.email.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span>{user.name}</span>
+        </div>
+        <h1 className="text-5xl font-bold">{resource.title}</h1>
+        <p className="">
+          {resource.description}
+          <br />
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat
+          nobis saepe illo delectus vel cumque pariatur aspernatur laudantium
+          facilis est minima reiciendis magni facere voluptatibus, suscipit nisi
+          numquam explicabo?
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          <Badge>{resource.type}</Badge>
+          <Badge variant="secondary">{resource.subject}</Badge>
+        </div>
+        <div className="w-full flex gap-6 flex-wrap">
+          <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+          <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+          <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+        </div>
+        <CommentSection comments={currentComments} />
+      </main>
     </div>
+  );
 }
+
