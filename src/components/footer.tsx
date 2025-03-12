@@ -1,18 +1,56 @@
 import Link from "next/link";
-import { Button } from "./ui/button";
+
+interface MenuItem {
+  title: string;
+  links: {
+    text: string;
+    url: string;
+  }[];
+}
+
+const menuItems: MenuItem[] = [
+  {
+    title: "Links",
+    links: [
+      { text: "Home", url: "/" },
+      { text: "Resources", url: "/resources" },
+      { text: "Blogs", url: "/blogs" },
+      { text: "Q&A", url: "/questions" },
+    ],
+  },
+];
 
 export default function Footer() {
-    return <footer className="w-full min-h-[256px] bg-secondary">
-        <div className="px-[128px] py-10">
-            <div className="space-y-10">
-                <h3 className="text-5xl">IIITD Resource Hub</h3>
-                <div className="flex flex-col justify-start gap-2">
-                    <Link className="hover:underline" href="/">Home</Link>
-                    <Link className="hover:underline" href="/resources">Resoruces</Link>
-                    <Link className="hover:underline" href="/blogs">Blogs</Link>
-                    <Link className="hover:underline" href="/questions">Q&amp;A</Link>
-                </div>
+  return (
+    <section className="py-24">
+      <div className="container pt-8 px-10 md:px-16 border-t-2 border-secondary">
+        <footer>
+          <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
+            <div className="col-span-2 mb-8 lg:mb-0">
+              <p className="text-xl font-semibold">IIITD Resource Hub</p>
+              <p className="text-muted-foreground">
+                Find PYQs, Quizes, Tutorials and Notes across IIITD.
+              </p>
             </div>
-        </div>
-    </footer>
+            {menuItems.map((section, sectionIdx) => (
+              <div key={sectionIdx}>
+                <h3 className="mb-4 font-bold">{section.title}</h3>
+                <ul className="space-y-2 text-muted-foreground">
+                  {section.links.map((link, linkIdx) => (
+                    <li
+                      key={linkIdx}
+                      className="font-medium hover:text-primary"
+                    >
+                      <Link href={link.url}>{link.text}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </footer>
+      </div>
+    </section>
+  );
 }
+
