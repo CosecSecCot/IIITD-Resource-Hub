@@ -10,9 +10,9 @@ import { notFound } from "next/navigation";
 export default async function Page({
   params,
 }: {
-  params: Promise<{ resourceID: number }>;
+  params: { resourceID: string }; // resourceID from the URL
 }) {
-  const { resourceID } = await params;
+  const resourceID = parseInt(params.resourceID, 10);
 
   const resource = resources.find((res) => res.resourceID == resourceID);
   if (!resource) {
