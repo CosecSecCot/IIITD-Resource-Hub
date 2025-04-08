@@ -13,6 +13,10 @@ const commentOnResource: CommentOnResource[] = [
     commentID: 3,
     resourceID: 5,
   },
+  {
+    commentID: 4,
+    resourceID: 1,
+  },
 ];
 
 export default commentOnResource;

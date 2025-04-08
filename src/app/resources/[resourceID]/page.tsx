@@ -33,37 +33,38 @@ export default async function Page({
 
   return (
     <div>
-      <main className="md:max-w-[765px] w-full mx-auto px-10 mt-10 mb-20 space-y-6">
-        <div className="flex gap-2 items-center">
-          <Avatar className="w-[48px] h-[48px]">
-            <AvatarImage src="" />
-            <AvatarFallback>
-              {user.email.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span>{user.name}</span>
-        </div>
-        <h1 className="text-5xl font-bold">{resource.title}</h1>
-        <p className="">
-          {resource.description}
-          <br />
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat
-          nobis saepe illo delectus vel cumque pariatur aspernatur laudantium
-          facilis est minima reiciendis magni facere voluptatibus, suscipit nisi
-          numquam explicabo?
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          <Badge>{resource.type}</Badge>
-          <Badge variant="secondary">{resource.subject}</Badge>
-        </div>
-        <div className="w-full flex gap-6 flex-wrap">
-          <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-          <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-          <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-        </div>
-        <CommentSection comments={currentComments} />
-      </main>
+      <div className="flex justify-center">
+        <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-6">
+          <div className="flex gap-2 items-center">
+            <Avatar className="w-[48px] h-[48px]">
+              <AvatarImage src="" />
+              <AvatarFallback>
+                {user.email.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span>{user.name}</span>
+          </div>
+          <h1 className="text-5xl font-bold">{resource.title}</h1>
+          <p className="">
+            {resource.description}
+            <br />
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat
+            nobis saepe illo delectus vel cumque pariatur aspernatur laudantium
+            facilis est minima reiciendis magni facere voluptatibus, suscipit
+            nisi numquam explicabo?
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <Badge>{resource.type}</Badge>
+            <Badge variant="secondary">{resource.subject}</Badge>
+          </div>
+          <div className="w-full flex gap-6 flex-wrap">
+            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+          </div>
+          <CommentSection comments={currentComments} />
+        </main>
+      </div>
     </div>
   );
 }
-
