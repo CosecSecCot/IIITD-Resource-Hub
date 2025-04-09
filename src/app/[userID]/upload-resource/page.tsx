@@ -1,13 +1,15 @@
+import UploadResourceForm from "@/app/[userID]/_components/upload-resource-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import users from "@/data/users";
 import { notFound } from "next/navigation";
 
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: { userID: string }; // userID from the URL
+  params: Promise<{ userID: string }>; // userID from the URL
 }) {
-  const userID = parseInt(params.userID, 10);
+  const res = await params;
+  const userID = parseInt(res.userID, 10);
   const user = users.find((user) => user.userID === userID);
 
   if (!user) {
@@ -34,6 +36,7 @@ export default function Page({
             facilis est minima reiciendis magni facere voluptatibus, suscipit
             nisi numquam explicabo?
           </p>
+          <UploadResourceForm userID={userID} />
         </main>
       </div>
     </div>
