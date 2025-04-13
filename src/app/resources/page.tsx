@@ -17,14 +17,16 @@ import { Resource } from "@/data/schema";
 export default function Resources() {
   return (
     <div className="">
-      <main className="max-w-[765px] mx-auto mt-20 mb-20">
-        <h1 className="text-6xl font-bold">Resources</h1>
+      <main className="md:w-[765px] px-10 mx-auto mt-20 mb-20">
+        <h1 className="md:text-6xl text-5xl font-bold">Resources</h1>
         <p className="text-muted-foreground mt-4">
           Search any type of resource across the whole platform.
         </p>
-        <div className="flex gap-2 mt-20">
+        <div className="flex md:flex-row flex-col gap-2 mt-20">
           <Input placeholder="Search Resources..." />
-          <Button type="submit">Search</Button>
+          <Button className="w-fit" type="submit">
+            Search
+          </Button>
         </div>
         <div className="mt-10 space-y-6">
           {resources.map((resource, index) => {
@@ -51,9 +53,9 @@ function ResourceCard({
     <Card className="cursor-pointer">
       <Link href={`resources/${resourceID}`}>
         <CardContent>
-          <div className="flex gap-6">
-            <div className="min-w-[256px] aspect-square bg-secondary rounded-lg" />
-            <div className="flex flex-col justify-between">
+          <div className="flex md:flex-row flex-col gap-6">
+            <div className="md:min-w-[256px] min-h-[256px] bg-secondary rounded-lg" />
+            <div className="flex flex-col justify-between gap-4">
               <div className="space-y-2">
                 <CardTitle className="text-xl">{title}</CardTitle>
                 <CardDescription>{description}</CardDescription>

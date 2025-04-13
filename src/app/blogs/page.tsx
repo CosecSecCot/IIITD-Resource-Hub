@@ -27,18 +27,20 @@ export default function Blogs() {
   }, [search]);
 
   return (
-    <main className="max-w-[765px] mx-auto mt-20 mb-20">
-      <h1 className="text-6xl font-bold">Blogs</h1>
+    <main className="md:w-[765px] px-10 mx-auto mt-20 mb-20">
+      <h1 className="md:text-6xl text-5xl font-bold">Blogs</h1>
       <p className="text-muted-foreground mt-4">
         Explore blog articles by students and faculty.
       </p>
-      <div className="flex gap-2 mt-20">
+      <div className="flex md:flex-row flex-col gap-2 mt-20">
         <Input
           placeholder="Search Blogs..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Button type="button">Search</Button>
+        <Button type="button" className="w-fit">
+          Search
+        </Button>
       </div>
       <div className="mt-10 space-y-6">
         {filteredBlogs.map((blog, index) => (
