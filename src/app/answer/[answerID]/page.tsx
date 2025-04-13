@@ -43,6 +43,7 @@ export default async function AnswerPage({
         <p className="text-sm text-secondary-foreground">
           Answered on {new Date(answer.dateAnswered).toDateString()}
         </p>
+        <p className="text-xl mt-4">{answer.content}</p>
         <div className="flex space-x-4">
           <Toggle aria-label="Upvote" className="cursor-pointer">
             <Heart className="h-4 w-4" />
@@ -53,8 +54,6 @@ export default async function AnswerPage({
             {answer.downvote}
           </Toggle>
         </div>
-        <p className="text-xl mt-4">{answer.content}</p>
-
         <section className="space-y-8 mt-10">
           {answerComments.length === 0 ? (
             <p className="text-muted-foreground">No comments yet.</p>

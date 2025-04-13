@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,12 +8,38 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
 import resources from "@/data/resources";
 import users from "@/data/users";
 import { Resource } from "@/data/schema";
+
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const subjects = [...new Set(resources.map((res) => res.subject))];
 
 export default function Resources() {
   return (
@@ -22,8 +49,23 @@ export default function Resources() {
         <p className="text-muted-foreground mt-4">
           Search any type of resource across the whole platform.
         </p>
-        <div className="flex md:flex-row flex-col gap-2 mt-20">
+        <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2 mt-20">
           <Input placeholder="Search Resources..." />
+          <ComboboxInput />
+          <Input type="date" />
+          <Input type="number" placeholder="Semester..." min={1} max={8} />
+          <Select defaultValue="All">
+            <SelectTrigger>
+              <SelectValue placeholder="Select resource type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Note">Note</SelectItem>
+              <SelectItem value="PYQ">PYQ</SelectItem>
+              <SelectItem value="Tutorial">Tutorial</SelectItem>
+              <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
+            </SelectContent>
+          </Select>
           <Button className="w-fit" type="submit">
             Search
           </Button>
@@ -79,5 +121,55 @@ function ResourceCard({
         </CardContent>
       </Link>
     </Card>
+  );
+}
+function ComboboxInput() {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {value
+            ? subjects.find((subject) => subject === value)
+            : "Select Subject..."}
+          <ChevronsUpDown className="opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <Command>
+          <CommandInput placeholder="Search Subject..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No Subject found.</CommandEmpty>
+            <CommandGroup>
+              {subjects.map((subject, idx) => (
+                <CommandItem
+                  key={idx}
+                  value={subject}
+                  onSelect={(currentValue) => {
+                    setValue(currentValue === value ? "" : currentValue);
+                    setOpen(false);
+                  }}
+                >
+                  {subject}
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      value === subject ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

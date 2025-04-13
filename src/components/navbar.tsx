@@ -12,7 +12,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { MenuIcon } from "lucide-react";
+import { MenuIcon, Search, User } from "lucide-react";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Input } from "@/components/ui/input";
 
 export function Navbar({ children }: { children: React.ReactNode }) {
   return (
@@ -42,8 +44,31 @@ export function Navbar({ children }: { children: React.ReactNode }) {
           </nav>
         </SheetContent>
       </Sheet>
-      <div className="w-full flex justify-end">
-        <Button>LogIn</Button>
+      <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+        <div className="relative ml-auto flex-1 sm:flex-initial">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search users..."
+            className="bg-background/65 pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+          />
+        </div>
+        <SignedOut>
+          <Button asChild>
+            <SignInButton />
+          </Button>
+        </SignedOut>
+        <SignedIn>
+          <UserButton>
+            <UserButton.MenuItems>
+              <UserButton.Link
+                label="View Profile"
+                labelIcon={<User />}
+                href="/users/1"
+              />
+            </UserButton.MenuItems>
+          </UserButton>
+        </SignedIn>
       </div>
     </header>
   );

@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Heart, HeartCrack } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
+import { Textarea } from "@/components/ui/textarea";
+import { Buda } from "next/font/google";
 
 export default async function QuestionPage({
   params,
@@ -59,6 +61,10 @@ export default async function QuestionPage({
         </div>
         <section className="space-y-8 mt-10">
           <h2 className="text-2xl font-semibold">Answers</h2>
+          <div className="space-y-2">
+            <Textarea placeholder="Write your answer here..." rows={10} />
+            <Button type="submit">Submit</Button>
+          </div>
           {answersToThisQuestion.length === 0 && (
             <p className="text-muted-foreground">
               No answers yet. Be the first to answer!
