@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import CommentSection from "@/components/comment-section";
+import { CommentSection } from "@/components/comment-section";
 
 import users from "@/data/users";
 import questions from "@/data/questions";
@@ -22,7 +22,9 @@ export default function QuestionPage({
   const user = users.find((u) => u.userID === question.userID);
   if (!user) notFound();
 
-  const answersToThisQuestion = answers.filter((a) => a.questionID === questionID);
+  const answersToThisQuestion = answers.filter(
+    (a) => a.questionID === questionID,
+  );
 
   return (
     <div className="flex justify-center">
@@ -55,7 +57,9 @@ export default function QuestionPage({
           <h2 className="text-2xl font-semibold">Answers</h2>
 
           {answersToThisQuestion.length === 0 && (
-            <p className="text-muted-foreground">No answers yet. Be the first to reply!</p>
+            <p className="text-muted-foreground">
+              No answers yet. Be the first to reply!
+            </p>
           )}
 
           {answersToThisQuestion.map((answer) => {
@@ -64,7 +68,7 @@ export default function QuestionPage({
             const answerComments = commentOnAnswer
               .filter((entry) => entry.answerID === answer.answerID)
               .map(({ commentID }) =>
-                comments.find((c) => c.commentID === commentID)
+                comments.find((c) => c.commentID === commentID),
               )
               .filter((c) => c != null);
 

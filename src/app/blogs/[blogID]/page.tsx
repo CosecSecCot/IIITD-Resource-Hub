@@ -5,13 +5,9 @@ import blogs from "@/data/blogs";
 import users from "@/data/users";
 import comments from "@/data/comments";
 import commentOnBlog from "@/data/comments-on-blog";
-import CommentSection from "@/components/comment-section";
+import { CommentSection } from "@/components/comment-section";
 
-export default function BlogPage({
-  params,
-}: {
-  params: { blogID: string };
-}) {
+export default function BlogPage({ params }: { params: { blogID: string } }) {
   const blogID = parseInt(params.blogID, 10);
 
   const blog = blogs.find((b) => b.blogID === blogID);

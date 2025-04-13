@@ -10,7 +10,7 @@ import users from "@/data/users";
 import commentReplies from "@/data/comments-on-comment";
 import allComments from "@/data/comments";
 
-export default function CommentSection({ comments }: { comments: Comment[] }) {
+export function CommentSection({ comments }: { comments: Comment[] }) {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold">Comments</h2>
@@ -21,14 +21,24 @@ export default function CommentSection({ comments }: { comments: Comment[] }) {
       <div className="space-y-6 overflow-x-scroll px-2 py-4">
         {comments.map((comment, index) => {
           if (!comment) return;
-          return <UserComment key={index} {...comment} />;
+          return (
+            <UserComment key={index} comment={comment} noReplies={false} />
+          );
         })}
       </div>
     </div>
   );
 }
 
-function UserComment({ commentID, content, date, isDeleted, userID }: Comment) {
+export function UserComment({
+  comment,
+  noReplies = false,
+}: {
+  comment: Comment;
+  noReplies: boolean;
+}) {
+  const { commentID, content, date, isDeleted, userID } = comment;
+
   const user = users.find((user) => user.userID === userID);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -61,7 +71,7 @@ function UserComment({ commentID, content, date, isDeleted, userID }: Comment) {
           <div className={`text-sm ${isDeleted ? "italic" : ""}`}>
             {isDeleted ? "This comment is deleted" : content}
           </div>
-          {replies.length > 0 && !showReplies && (
+          {replies.length > 0 && !showReplies && !noReplies && (
             <Button
               variant="outline"
               onClick={() => setShowReplies(!showReplies)}
@@ -73,12 +83,13 @@ function UserComment({ commentID, content, date, isDeleted, userID }: Comment) {
         </div>
       </div>
       {showReplies &&
+        !noReplies &&
         replies.map((reply) => (
           <div
             className="pt-4 ml-5 pl-11 border-l border-[#c4c4c5]"
             key={reply.commentID}
           >
-            <UserComment {...reply} />
+            <UserComment comment={reply} noReplies={noReplies} />
           </div>
         ))}
     </div>
