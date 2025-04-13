@@ -51,7 +51,7 @@ export default function Blogs() {
   );
 }
 
-function BlogCard({
+export function BlogCard({
   blogID,
   userID,
   title,

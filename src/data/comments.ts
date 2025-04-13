@@ -30,7 +30,8 @@ const comments: Comment[] = [
   },
   {
     commentID: 4,
-    content: "This is a parent comment.",
+    content:
+      "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Eaque reprehenderit mollitia necessitatibus minus ullam voluptates excepturi deserunt quos consectetur accusantium placeat odit, iure dolorum dolor asperiores iste, voluptatem ea minima?",
     date: "2025-04-08",
     upvote: 5,
     downvote: 0,

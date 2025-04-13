@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-
+import { Toggle } from "./ui/toggle";
+import { Heart, HeartCrack } from "lucide-react";
 import { Comment } from "@/data/schema";
 import users from "@/data/users";
 
@@ -37,7 +38,8 @@ export function UserComment({
   comment: Comment;
   noReplies: boolean;
 }) {
-  const { commentID, content, date, isDeleted, userID } = comment;
+  const { commentID, content, date, upvote, downvote, isDeleted, userID } =
+    comment;
 
   const user = users.find((user) => user.userID === userID);
   const [showReplies, setShowReplies] = useState(false);
@@ -66,10 +68,22 @@ export function UserComment({
         <div className="grid gap-1.5">
           <div className="flex items-center gap-2">
             <div className="font-bold">{user.name}</div>
-            <div className="text-xs text-muted-foreground">{date}</div>
+            <div className="text-xs text-muted-foreground">
+              {new Date(date).toDateString()}
+            </div>
           </div>
           <div className={`text-sm ${isDeleted ? "italic" : ""}`}>
             {isDeleted ? "This comment is deleted" : content}
+          </div>
+          <div className="flex space-x-2">
+            <Toggle aria-label="Upvote" size="sm" className="cursor-pointer">
+              <Heart className="h-4 w-4" />
+              {upvote}
+            </Toggle>
+            <Toggle aria-label="Downvote" size="sm" className="cursor-pointer">
+              <HeartCrack className="h-4 w-4" />
+              {downvote}
+            </Toggle>
           </div>
           {replies.length > 0 && !showReplies && !noReplies && (
             <Button

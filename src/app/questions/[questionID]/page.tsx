@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Heart, HeartCrack } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Textarea } from "@/components/ui/textarea";
-import { Buda } from "next/font/google";
 
 export default async function QuestionPage({
   params,

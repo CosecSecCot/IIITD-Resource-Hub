@@ -50,7 +50,7 @@ export default function QuestionsPage() {
   );
 }
 
-function QuestionCard({
+export function QuestionCard({
   questionID,
   content,
   dateAsked,
