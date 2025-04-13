@@ -1,7 +1,9 @@
+"use client";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CommentSection } from "@/components/comment-section";
+import Link from "next/link"; // Import Link for navigation
 
 import users from "@/data/users";
 import questions from "@/data/questions";
@@ -93,8 +95,13 @@ export default function QuestionPage({
                 {/* Answer Content */}
                 <p className="text-lg">{answer.content}</p>
 
-                {/* Comments on this answer */}
-                <CommentSection comments={answerComments} />
+                {/* Link to the answer detail page */}
+                <Link
+                  href={`/answer/${answer.answerID}`}
+                  className="text-blue-600 underline mt-2 inline-block"
+                >
+                  View details
+                </Link>
               </div>
             );
           })}

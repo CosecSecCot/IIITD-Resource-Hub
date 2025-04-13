@@ -3,7 +3,7 @@ import { CommentOnAnswer } from "@/data/schema";
 const commentOnAnswer: CommentOnAnswer[] = [
   {
     commentID: 1,
-    answerID: 2,
+    answerID: 1,
   },
   {
     commentID: 3,
