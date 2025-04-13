@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,9 +19,10 @@ export default function Blogs() {
   const [search, setSearch] = useState("");
 
   const filteredBlogs = useMemo(() => {
-    return blogs.filter((blog) =>
-      blog.title.toLowerCase().includes(search.toLowerCase()) ||
-      blog.content.toLowerCase().includes(search.toLowerCase())
+    return blogs.filter(
+      (blog) =>
+        blog.title.toLowerCase().includes(search.toLowerCase()) ||
+        blog.content.toLowerCase().includes(search.toLowerCase()),
     );
   }, [search]);
 
@@ -75,13 +75,9 @@ function BlogCard({
             <div className="space-y-2">
               <CardTitle className="text-xl">{title}</CardTitle>
               <CardDescription>
-                {content.length > 150 ? content.slice(0, 150) + "..." : content}
+                {new Date(dateCreated).toDateString()}
               </CardDescription>
-              <div className="flex gap-2">
-                <Badge variant="secondary">
-                  {new Date(dateCreated).toDateString()}
-                </Badge>
-              </div>
+              <p className="line-clamp-3">{content}</p>
             </div>
             <div className="flex gap-2 items-center">
               <Avatar className="w-[40px] h-[40px]">

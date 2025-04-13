@@ -19,6 +19,13 @@ import questions from "@/data/questions";
 import comments from "@/data/comments";
 import { UserComment } from "@/components/comment-section";
 import commentReplies from "@/data/comments-on-comment";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export default async function Page({
   params,
@@ -57,13 +64,13 @@ export default async function Page({
       <div className="flex justify-center">
         <main className="flex lg:flex-row flex-col justify-around gap-8 md:w-[80vw] w-full px-10 mt-10 mb-20 space-y-6">
           <div className="space-y-4">
-            <Avatar className="w-[256px] h-[256px]">
+            <Avatar className="w-[256px] h-[256px] text-5xl">
               <AvatarImage src="" />
               <AvatarFallback>
                 {user.email.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="space-y-4">
               <h1>
                 <span className="text-2xl block">{user.name}</span>
                 <span className="text-xl text-secondary-foreground block">
@@ -72,12 +79,36 @@ export default async function Page({
               </h1>
               <p>
                 <span className="text-lg text-secondary-foreground block">
-                  Registerd: {user.registrationDate}
+                  Registered: {user.registrationDate}
                 </span>
-                <span className="text-lg text-secondary-foreground block">
+                <span
+                  className={`text-lg font-bold block ${user.contribution > 0 ? "text-green-600" : "text-destructive"}`}
+                >
                   Contribution: {user.contribution}
                 </span>
               </p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="w-full">Create</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/users/${userID}/upload/resource`}>
+                      Upload Resource
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/users/${userID}/upload/blog`}>
+                      Write a Blog
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/users/${userID}/upload/question`}>
+                      Ask a Question
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <div className="lg:w-3/4 w-full space-y-4">

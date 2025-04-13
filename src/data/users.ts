@@ -12,7 +12,7 @@ const users: User[] = [
     userID: 2,
     name: "Bob Smith",
     email: "bob@iiitd.ac.in",
-    contribution: 5,
+    contribution: -19,
     registrationDate: "2024-02-10T10:45:00Z",
   },
   {

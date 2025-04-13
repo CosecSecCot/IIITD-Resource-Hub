@@ -1,7 +1,7 @@
 "use client";
 
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Define the Zod schema for our resource form.
 const resourceSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
@@ -43,33 +42,56 @@ const resourceSchema = z.object({
     })
     .min(1, "Semester cannot be less than 1")
     .max(8, "Semester cannot be greater than 8"),
-  resourceFile: z
-    .string()
-    .url({ message: "Must be a valid URL" })
-    .refine((url) => url.includes("drive.google.com"), {
-      message: "Must be a Google Drive link",
-    }),
+  resourceFiles: z
+    .array(
+      z
+        .string()
+        .url({ message: "Must be a valid URL" })
+        .refine((url) => url.includes("drive.google.com"), {
+          message: "Must be a Google Drive link",
+        }),
+    )
+    .min(1, "At least one Google Drive link is required"),
 });
 
-// Infer the types from the schema.
-type ResourceFormData = z.infer<typeof resourceSchema>;
+export type ResourceFormData = z.infer<typeof resourceSchema>;
 
-export default function UploadResourceForm({ userID }: { userID: number }) {
+interface UploadResourceFormProps {
+  userID: number;
+  initialData?: Partial<Omit<ResourceFormData, "resourceFiles">> & {
+    resourceFiles?: string[];
+  };
+}
+
+export default function UploadResourceForm({
+  userID,
+  initialData,
+}: UploadResourceFormProps) {
   const form = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      type: "Miscellaneous",
-      subject: "",
-      year: new Date().getFullYear(),
-      semester: 1,
-      resourceFile: "",
+      title: initialData?.title || "",
+      description: initialData?.description || "",
+      type: initialData?.type || "Miscellaneous",
+      subject: initialData?.subject || "",
+      year: initialData?.year || new Date().getFullYear(),
+      semester: initialData?.semester || 1,
+      resourceFiles: initialData?.resourceFiles || [""],
     },
   });
 
+  // useFieldArray to handle dynamic array of resourceFiles.
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "resourceFiles" as never,
+  });
+
   const onSubmit = (values: ResourceFormData) => {
-    console.log("Submitted resource:", { userId: userID, ...values });
+    if (initialData) {
+      console.log("Updated resource:", { userID, ...values });
+    } else {
+      console.log("Submitted resource:", { userID, ...values });
+    }
   };
 
   return (
@@ -179,21 +201,40 @@ export default function UploadResourceForm({ userID }: { userID: number }) {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="resourceFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Google Drive Link</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter Google Drive link" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Resource Files: Dynamic array of Google Drive links */}
+        <div className="space-y-4">
+          <FormLabel>Google Drive Links</FormLabel>
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name={`resourceFiles.${index}`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input placeholder="Enter Google Drive link" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                variant="destructive"
+                type="button"
+                onClick={() => remove(index)}
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          <Button type="button" onClick={() => append("")}>
+            Add Link
+          </Button>
+        </div>
 
-        <Button type="submit">Create Resource</Button>
+        <Button type="submit">
+          {initialData ? "Update Resource" : "Create Resource"}
+        </Button>
       </form>
     </Form>
   );

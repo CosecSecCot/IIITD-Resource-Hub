@@ -2,7 +2,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -14,13 +13,15 @@ import { useMemo, useState } from "react";
 
 import questions from "@/data/questions"; // this is your array
 import users from "@/data/users"; // assuming you have user info
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Heart, HeartCrack } from "lucide-react";
 
 export default function QuestionsPage() {
   const [search, setSearch] = useState("");
 
   const filteredQuestions = useMemo(() => {
     return questions.filter((q) =>
-      q.content.toLowerCase().includes(search.toLowerCase())
+      q.content.toLowerCase().includes(search.toLowerCase()),
     );
   }, [search]);
 
@@ -71,19 +72,31 @@ function QuestionCard({
     <Card className="cursor-pointer">
       <Link href={`/questions/${questionID}`}>
         <CardContent>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col space-y-6">
             <div className="space-y-2">
               <CardTitle className="text-lg">{content}</CardTitle>
               <CardDescription>
-                Asked on {new Date(dateAsked).toLocaleDateString()}
+                {new Date(dateAsked).toDateString()}
               </CardDescription>
-              <div className="flex gap-3 text-sm">
-                <Badge>👍 {upvote}</Badge>
-                <Badge variant="secondary">👎 {downvote}</Badge>
+              <div className="flex space-x-4">
+                <div className="flex space-x-2 items-center">
+                  <Heart className="h-4 w-4" />
+                  <span>{upvote}</span>
+                </div>
+                <div className="flex space-x-2 items-center">
+                  <HeartCrack className="h-4 w-4" />
+                  <span>{downvote}</span>
+                </div>
               </div>
             </div>
-            <div className="text-muted-foreground text-sm">
-              Asked by {user.name}
+            <div className="flex gap-2 items-center">
+              <Avatar className="w-[40px] h-[40px]">
+                <AvatarImage src="" />
+                <AvatarFallback>
+                  {user.email?.slice(0, 2).toUpperCase() || "AU"}
+                </AvatarFallback>
+              </Avatar>
+              <span>{user.name}</span>
             </div>
           </div>
         </CardContent>

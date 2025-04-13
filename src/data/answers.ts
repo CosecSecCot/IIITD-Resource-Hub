@@ -28,7 +28,7 @@ const answers: Answer[] = [
     dateAnswered: "2024-03-02T11:45:00Z",
     upvote: 22,
     downvote: 0,
-    questionID: 3,
+    questionID: 1,
     userID: 1,
   },
 ];

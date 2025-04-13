@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { CommentSection } from "@/components/comment-section";
 
 import users from "@/data/users";
 import answers from "@/data/answers";
 import comments from "@/data/comments";
 import commentOnAnswer from "@/data/comments-on-answer";
+import { Toggle } from "@/components/ui/toggle";
+import { Heart, HeartCrack } from "lucide-react";
 
 export default async function AnswerPage({
   params,
@@ -25,12 +26,11 @@ export default async function AnswerPage({
   const answerComments = commentOnAnswer
     .filter((entry) => entry.answerID === answer.answerID)
     .map(({ commentID }) => comments.find((c) => c.commentID === commentID))
-    .filter((c) => c != null);
+    .filter((c) => c != undefined);
 
   return (
     <div className="flex justify-center">
-      <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-10">
-        {/* Answer Author */}
+      <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-6">
         <div className="flex gap-2 items-center">
           <Avatar className="w-[48px] h-[48px]">
             <AvatarImage src={""} />
@@ -40,20 +40,22 @@ export default async function AnswerPage({
           </Avatar>
           <span>{answerUser.name}</span>
         </div>
-
-        {/* Answer Content */}
-        <h2 className="text-3xl font-semibold mt-4">{answer.content}</h2>
-
-        {/* Metadata */}
-        <div className="flex gap-2 flex-wrap text-sm mt-4">
-          <Badge variant="secondary">
-            Answered on {new Date(answer.dateAnswered).toDateString()}
-          </Badge>
+        <p className="text-sm text-secondary-foreground">
+          Answered on {new Date(answer.dateAnswered).toDateString()}
+        </p>
+        <div className="flex space-x-4">
+          <Toggle aria-label="Upvote" className="cursor-pointer">
+            <Heart className="h-4 w-4" />
+            {answer.upvote}
+          </Toggle>
+          <Toggle aria-label="Downvote" className="cursor-pointer">
+            <HeartCrack className="h-4 w-4" />
+            {answer.downvote}
+          </Toggle>
         </div>
+        <p className="text-xl mt-4">{answer.content}</p>
 
-        {/* Comments Section */}
         <section className="space-y-8 mt-10">
-          {/* Display Comments */}
           {answerComments.length === 0 ? (
             <p className="text-muted-foreground">No comments yet.</p>
           ) : (

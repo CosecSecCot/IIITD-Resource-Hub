@@ -1,11 +1,20 @@
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link"; // Import Link for navigation
 
 import users from "@/data/users";
 import questions from "@/data/questions";
 import answers from "@/data/answers";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Heart, HeartCrack } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
 
 export default async function QuestionPage({
   params,
@@ -26,8 +35,7 @@ export default async function QuestionPage({
 
   return (
     <div className="flex justify-center">
-      <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-10">
-        {/* Author Info */}
+      <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-6">
         <div className="flex gap-2 items-center">
           <Avatar className="w-[48px] h-[48px]">
             <AvatarImage src={""} />
@@ -37,61 +45,58 @@ export default async function QuestionPage({
           </Avatar>
           <span>{user.name}</span>
         </div>
-
-        {/* Question Content */}
         <h1 className="text-4xl font-bold">{question.content}</h1>
-
-        {/* Metadata */}
-        <div className="flex gap-2 flex-wrap text-sm">
-          <Badge variant="secondary">
-            Asked on {new Date(question.dateAsked).toDateString()}
-          </Badge>
-          <Badge>👍 {question.upvote}</Badge>
-          <Badge variant="destructive">👎 {question.downvote}</Badge>
+        <p>Asked on {new Date(question.dateAsked).toDateString()}</p>
+        <div className="flex space-x-4">
+          <Toggle aria-label="Upvote" className="cursor-pointer">
+            <Heart className="h-4 w-4" />
+            {question.upvote}
+          </Toggle>
+          <Toggle aria-label="Downvote" className="cursor-pointer">
+            <HeartCrack className="h-4 w-4" />
+            {question.downvote}
+          </Toggle>
         </div>
-
-        {/* Answer Section */}
         <section className="space-y-8 mt-10">
           <h2 className="text-2xl font-semibold">Answers</h2>
-
           {answersToThisQuestion.length === 0 && (
             <p className="text-muted-foreground">
-              No answers yet. Be the first to reply!
+              No answers yet. Be the first to answer!
             </p>
           )}
 
-          {answersToThisQuestion.map((answer) => {
+          {answersToThisQuestion.map((answer, idx) => {
             const answerUser = users.find((u) => u.userID === answer.userID);
 
             return (
-              <div
-                key={answer.answerID}
-                className="border border-border rounded-xl p-5 space-y-4"
-              >
-                {/* Answer Author */}
-                {answerUser && (
-                  <div className="flex gap-2 items-center">
-                    <Avatar className="w-[40px] h-[40px]">
-                      <AvatarImage src={""} />
-                      <AvatarFallback>
-                        {answerUser.email?.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>{answerUser.name}</span>
-                  </div>
-                )}
-
-                {/* Answer Content */}
-                <p className="text-lg">{answer.content}</p>
-
-                {/* Link to the answer detail page */}
-                <Link
-                  href={`/answer/${answer.answerID}`}
-                  className="text-blue-600 underline mt-2 inline-block"
-                >
-                  View details
-                </Link>
-              </div>
+              <Card key={idx}>
+                <CardHeader>
+                  {answerUser ? (
+                    <div className="flex gap-2 items-center">
+                      <Avatar className="w-[40px] h-[40px]">
+                        <AvatarImage src={""} />
+                        <AvatarFallback>
+                          {answerUser.email?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{answerUser.name}</span>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 items-center">
+                      <Skeleton className="h-[40px] w-[40px] rounded-full" />
+                      <Skeleton className="h-4 w-[250px]" />
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <p>{answer.content}</p>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" asChild>
+                    <Link href={`/answer/${answer.answerID}`}>See More</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
             );
           })}
         </section>
