@@ -1,4 +1,3 @@
-"use client";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +8,12 @@ import answers from "@/data/answers";
 import comments from "@/data/comments";
 import commentOnAnswer from "@/data/comments-on-answer";
 
-export default function AnswerPage({
+export default async function AnswerPage({
   params,
 }: {
-  params: { answerID: string };
+  params: Promise<{ answerID: string }>;
 }) {
-  const answerID = parseInt(params.answerID, 10);
+  const answerID = parseInt((await params).answerID, 10);
 
   const answer = answers.find((a) => a.answerID === answerID);
   if (!answer) notFound();
@@ -25,9 +24,7 @@ export default function AnswerPage({
   // Get comments related to the answer
   const answerComments = commentOnAnswer
     .filter((entry) => entry.answerID === answer.answerID)
-    .map(({ commentID }) =>
-      comments.find((c) => c.commentID === commentID)
-    )
+    .map(({ commentID }) => comments.find((c) => c.commentID === commentID))
     .filter((c) => c != null);
 
   return (
@@ -56,7 +53,6 @@ export default function AnswerPage({
 
         {/* Comments Section */}
         <section className="space-y-8 mt-10">
-
           {/* Display Comments */}
           {answerComments.length === 0 ? (
             <p className="text-muted-foreground">No comments yet.</p>

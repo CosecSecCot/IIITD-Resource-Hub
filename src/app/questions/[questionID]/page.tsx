@@ -1,22 +1,18 @@
-"use client";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CommentSection } from "@/components/comment-section";
 import Link from "next/link"; // Import Link for navigation
 
 import users from "@/data/users";
 import questions from "@/data/questions";
 import answers from "@/data/answers";
-import comments from "@/data/comments";
-import commentOnAnswer from "@/data/comments-on-answer";
 
-export default function QuestionPage({
+export default async function QuestionPage({
   params,
 }: {
-  params: { questionID: string };
+  params: Promise<{ questionID: string }>;
 }) {
-  const questionID = parseInt(params.questionID, 10);
+  const questionID = parseInt((await params).questionID, 10);
 
   const question = questions.find((q) => q.questionID === questionID);
   if (!question) notFound();
@@ -66,13 +62,6 @@ export default function QuestionPage({
 
           {answersToThisQuestion.map((answer) => {
             const answerUser = users.find((u) => u.userID === answer.userID);
-
-            const answerComments = commentOnAnswer
-              .filter((entry) => entry.answerID === answer.answerID)
-              .map(({ commentID }) =>
-                comments.find((c) => c.commentID === commentID),
-              )
-              .filter((c) => c != null);
 
             return (
               <div

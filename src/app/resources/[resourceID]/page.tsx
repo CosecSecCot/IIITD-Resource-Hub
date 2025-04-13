@@ -1,63 +1,70 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; 
+import { CommentSection } from "@/components/comment-section";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import comments from "@/data/comments";
+import commentOnResource from "@/data/comments-on-resource";
+import resources from "@/data/resources";
+import users from "@/data/users";
+import { notFound } from "next/navigation";
 
-export default function UploadQuestion() {
-  const [title, setTitle] = useState("");
-  const [question, setQuestion] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ resourceID: string }>; // resourceID from the URL
+}) {
+  const resourceID = parseInt((await params).resourceID, 10);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const resource = resources.find((res) => res.resourceID == resourceID);
+  if (!resource) {
+    notFound();
+  }
+  const user = users.find((user) => user.userID === resource.userID);
+  if (!user) {
+    notFound();
+  }
+  const currentComments = commentOnResource
+    .filter((comment) => comment.resourceID == resourceID)
+    .map(({ commentID }) => comments.find((cmt) => cmt.commentID == commentID))
+    .filter((comment) => comment != undefined);
 
-    const response = await fetch("http://localhost:5000/api/questions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title,
-        question,
-      }),
-    });
-
-    if (response.ok) {
-      setSubmitted(true);
-    }
-  };
+  if (!user) {
+    notFound();
+  }
 
   return (
-    <div className="max-w-[765px] mx-auto mt-20 mb-20">
-      <h1 className="text-6xl font-bold">Upload a Question</h1>
-      <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
-        <div>
-          <Input
-            placeholder="Enter the question title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Textarea
-            placeholder="Enter the question details"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            required
-            rows={6}
-          />
-        </div>
-        <Button type="submit" className="mt-4">
-          Submit Question
-        </Button>
-      </form>
-
-      {submitted && (
-        <div className="mt-6 text-green-600">
-          <p>Your question has been submitted successfully!</p>
-        </div>
-      )}
+    <div>
+      <div className="flex justify-center">
+        <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-6">
+          <div className="flex gap-2 items-center">
+            <Avatar className="w-[48px] h-[48px]">
+              <AvatarImage src="" />
+              <AvatarFallback>
+                {user.email.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span>{user.name}</span>
+          </div>
+          <h1 className="text-5xl font-bold">{resource.title}</h1>
+          <p className="">
+            {resource.description}
+            <br />
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat
+            nobis saepe illo delectus vel cumque pariatur aspernatur laudantium
+            facilis est minima reiciendis magni facere voluptatibus, suscipit
+            nisi numquam explicabo?
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <Badge>{resource.type}</Badge>
+            <Badge variant="secondary">{resource.subject}</Badge>
+          </div>
+          <div className="w-full flex gap-6 flex-wrap">
+            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+          </div>
+          <CommentSection comments={currentComments} />
+        </main>
+      </div>
     </div>
   );
 }
