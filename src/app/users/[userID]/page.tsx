@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import users from "@/data/users";
 import resources from "@/data/resources";
 import blogs from "@/data/blogs";
 import questions from "@/data/questions";
@@ -26,6 +25,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { neon } from "@neondatabase/serverless";
+import { getClerkUserData } from "@/app/_actions/clerk";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export default async function Page({
   params,
@@ -33,7 +36,13 @@ export default async function Page({
   params: Promise<{ userID: string }>; // userID from the URL
 }) {
   const userID = parseInt((await params).userID, 10);
-  const user = users.find((user) => user.userID === userID);
+  const user = (await sql`SELECT * FROM Users WHERE userid=${userID}`)[0];
+  if (!user) {
+    notFound();
+  }
+  console.log(user);
+
+  const clerkCurrentUser = await getClerkUserData(user["clerkuserid"]);
 
   const userResources = resources.filter(
     (resource) => resource.userID === userID,
@@ -55,36 +64,33 @@ export default async function Page({
     .map((mapping) => comments.find((c) => c.commentID === mapping.commentID))
     .filter((reply): reply is (typeof comments)[0] => Boolean(reply));
 
-  if (!user) {
-    notFound();
-  }
-
   return (
     <div>
       <div className="flex justify-center">
         <main className="flex lg:flex-row flex-col justify-around gap-8 md:w-[80vw] w-full px-10 mt-10 mb-20 space-y-6">
           <div className="space-y-4">
             <Avatar className="w-[256px] h-[256px] text-5xl">
-              <AvatarImage src="" />
+              <AvatarImage src={clerkCurrentUser.imageUrl} />
               <AvatarFallback>
-                {user.email.slice(0, 2).toUpperCase()}
+                {user["email"].slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-4">
               <h1>
                 <span className="text-2xl block">{user.name}</span>
                 <span className="text-xl text-secondary-foreground block">
-                  {user.email}
+                  {user["email"]}
                 </span>
               </h1>
               <p>
                 <span className="text-lg text-secondary-foreground block">
-                  Registered: {user.registrationDate}
+                  Registered:{" "}
+                  {new Date(user["registrationdate"]).toDateString()}
                 </span>
                 <span
-                  className={`text-lg font-bold block ${user.contribution > 0 ? "text-green-600" : "text-destructive"}`}
+                  className={`text-lg font-bold block ${user["contribution"] >= 0 ? "text-green-600" : "text-destructive"}`}
                 >
-                  Contribution: {user.contribution}
+                  Contribution: {user["contribution"]}
                 </span>
               </p>
               <DropdownMenu>

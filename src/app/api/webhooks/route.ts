@@ -35,11 +35,12 @@ export async function POST(req: Request) {
       const firstName = evt.data.first_name || "";
       const lastName = evt.data.last_name || "";
       const fullName = `${firstName} ${lastName}`.trim() || "Anonymous";
+      const userID = evt.data.id;
 
       // Insert the new user into the Users table.
       await sql`
-        INSERT INTO Users (Name, Email)
-        VALUES (${fullName}, ${email})
+        INSERT INTO Users (Name, Email, ClerkUserID)
+        VALUES (${fullName}, ${email}, ${userID})
         ON CONFLICT (Email) DO NOTHING
       `;
 
