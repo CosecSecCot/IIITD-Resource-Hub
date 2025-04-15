@@ -5,10 +5,10 @@ import resources from "@/data/resources";
 import questions from "@/data/questions";
 import comments from "@/data/comments";
 import blogs from "@/data/blogs";
-import { QuestionCard } from "@/app/questions/page";
 import { UserComment } from "@/components/comment-section";
-import { BlogCard } from "@/app/blogs/page";
 import Link from "next/link";
+import { QuestionCard } from "@/app/_components/question-card";
+import { BlogCard } from "@/app/_components/blog-card";
 
 export default function Home() {
   // Group resource counts per user.
