@@ -70,7 +70,7 @@ export default async function Page({
         <main className="flex lg:flex-row flex-col justify-around gap-8 md:w-[80vw] w-full px-10 mt-10 mb-20 space-y-6">
           <div className="space-y-4">
             <Avatar className="w-[256px] h-[256px] text-5xl">
-              <AvatarImage src={clerkCurrentUser.imageUrl} />
+              <AvatarImage src={clerkCurrentUser?.imageUrl} />
               <AvatarFallback>
                 {user["email"].slice(0, 2).toUpperCase()}
               </AvatarFallback>

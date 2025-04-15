@@ -14,6 +14,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Define the blog schema.
 const blogSchema = z.object({
@@ -24,10 +26,15 @@ const blogSchema = z.object({
 // Infer the TypeScript type.
 type BlogFormData = z.infer<typeof blogSchema>;
 
+// Extend the type to include an optional blogID for editing.
+interface BlogData extends BlogFormData {
+  blogID?: number;
+}
+
 // Accept an optional initialData prop.
 interface PostBlogFormProps {
   userID: number;
-  initialData?: Partial<BlogFormData>;
+  initialData?: BlogData;
 }
 
 export default function PostBlogForm({
@@ -41,14 +48,47 @@ export default function PostBlogForm({
       content: "",
     },
   });
+  const router = useRouter();
 
   const onSubmit = async (values: BlogFormData) => {
-    // Branch logic based on whether we're updating or creating.
-    if (initialData) {
-      console.log("Updated blog:", { userID, ...values });
+    if (initialData && initialData.blogID) {
+      // If editing an existing blog, call the update endpoint.
+      const res = await fetch(`/api/blogs/${initialData.blogID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userID, ...values }),
+      });
+      if (res.ok) {
+        console.log("Blog updated successfully:", { userID, ...values });
+        toast("Blog updated successfully!");
+      } else {
+        console.error("Error updating blog");
+        toast("Uh oh! Something went wrong.", {
+          description: "There was a problem updating the blog!",
+        });
+      }
     } else {
-      console.log("Submitted blog:", { userID, ...values });
+      // If creating a new blog, call the create endpoint.
+      const res = await fetch("/api/blogs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userID, ...values }),
+      });
+      if (res.ok) {
+        console.log("Blog created successfully:", { userID, ...values });
+        toast("Blog created successfully!");
+      } else {
+        console.error("Error creating blog");
+        toast("Uh oh! Something went wrong.", {
+          description: "There was a problem creating the blog!",
+        });
+      }
     }
+    router.push(`/users/${userID}`);
   };
 
   return (
