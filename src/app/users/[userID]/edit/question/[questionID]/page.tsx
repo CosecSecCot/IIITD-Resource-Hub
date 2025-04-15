@@ -1,0 +1,48 @@
+import { notFound } from "next/navigation";
+import users from "@/data/users";
+import questions from "@/data/questions";
+import { QuestionForm } from "@/app/users/[userID]/_components/ask-question-form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ userID: string; questionID: string }>;
+}) {
+  const resolvedParams = await params;
+  const userID = parseInt(resolvedParams.userID, 10);
+  const questionID = parseInt(resolvedParams.questionID, 10);
+
+  const user = users.find((user) => user.userID === userID);
+  if (!user) {
+    notFound();
+  }
+
+  const questionToEdit = questions.find((q) => q.questionID === questionID);
+  if (!questionToEdit) {
+    notFound();
+  }
+
+  const initialData = {
+    // title: questionToEdit.title,
+    question: questionToEdit.content,
+  };
+
+  return (
+    <div className="flex justify-center">
+      <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-6">
+        <div className="flex gap-2 items-center">
+          <Avatar className="w-[48px] h-[48px]">
+            <AvatarImage src="" />
+            <AvatarFallback>
+              {user.email.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span>{user.name}</span>
+        </div>
+        <h1 className="text-5xl font-bold">Edit Your Question</h1>
+        <QuestionForm userID={userID} initialData={initialData} />
+      </main>
+    </div>
+  );
+}

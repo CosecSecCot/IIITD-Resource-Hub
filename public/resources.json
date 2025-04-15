@@ -1,0 +1,58 @@
+[
+  {
+    "user": "Alice",
+    "title": "Data Structures PYQ",
+    "description": "Previous year question papers for Data Structures.",
+    "category": "PYQ",
+    "tags": ["DSA", "University", "Exam"]
+  },
+  {
+    "user": "Bob",
+    "title": "React Tutorial",
+    "description": "A beginner-friendly guide to React.js with examples.",
+    "category": "Tutorial",
+    "tags": ["React", "Frontend", "JavaScript"]
+  },
+  {
+    "user": "Charlie",
+    "title": "Operating Systems Notes",
+    "description": "Comprehensive notes on OS concepts, including scheduling and memory management.",
+    "category": "Notes",
+    "tags": ["OS", "Computer Science", "Study Material"]
+  },
+  {
+    "user": "David",
+    "title": "Miscellaneous Study Guide",
+    "description": "A collection of useful study resources from various domains.",
+    "category": "Misc",
+    "tags": ["General", "Study", "Guides"]
+  },
+  {
+    "user": "Eve",
+    "title": "Machine Learning PYQ",
+    "description": "Past year exam questions for machine learning subjects.",
+    "category": "PYQ",
+    "tags": ["ML", "AI", "Exam"]
+  },
+  {
+    "user": "Frank",
+    "title": "JavaScript Basics",
+    "description": "A tutorial covering the fundamentals of JavaScript.",
+    "category": "Tutorial",
+    "tags": ["JavaScript", "Programming", "Web"]
+  },
+  {
+    "user": "Grace",
+    "title": "Computer Networks Notes",
+    "description": "Detailed notes on networking concepts, including TCP/IP and protocols.",
+    "category": "Notes",
+    "tags": ["Networks", "Computer Science", "Study"]
+  },
+  {
+    "user": "Hannah",
+    "title": "Miscellaneous Coding Challenges",
+    "description": "A set of interesting coding challenges for practice.",
+    "category": "Misc",
+    "tags": ["Coding", "Challenges", "Practice"]
+  }
+]
