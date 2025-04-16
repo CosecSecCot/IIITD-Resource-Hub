@@ -24,13 +24,9 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
-import resources from "@/data/resources";
-import users from "@/data/users";
-import { Resource } from "@/data/schema";
-
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   Select,
   SelectContent,
@@ -38,10 +34,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const subjects = [...new Set(resources.map((res) => res.subject))];
+import Image from "next/image";
+import { extractGoogleDriveFileID } from "@/app/_actions/utils";
 
 export default function Resources() {
+  const [search, setSearch] = useState("");
+  const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("");
+  const [resourceType, setResourceType] = useState("All");
+  const [resources, setResources] = useState<ResourceCardProps[]>([]);
+  const [isPending, startTransition] = useTransition();
+
+  async function loadResources() {
+    try {
+      const res = await fetch(`/api/resources`);
+      if (!res.ok) {
+        console.error("Error fetching resources");
+        return;
+      }
+      const data: ResourceCardProps[] = await res.json();
+      setSubjects([...new Set(data.map((resource) => resource["subject"]))]);
+      console.log(data);
+      setResources(data);
+    } catch (err) {
+      console.error("Failed to load resources:", err);
+    }
+  }
+
+  useEffect(() => {
+    startTransition(() => {
+      loadResources();
+    });
+  }, []);
+
+  const filteredResources = useMemo(() => {
+    console.log(year);
+    return resources.filter(
+      (resource) =>
+        (resource.title.toLowerCase().includes(search.toLowerCase()) ||
+          resource.description.toLowerCase().includes(search.toLowerCase())) &&
+        (subject.trim() == "" || resource.subject === subject) &&
+        (year.trim() == "" || resource.year === new Date(year).getFullYear()) &&
+        (semester.trim() == "" ||
+          resource.semester === parseInt(semester, 10)) &&
+        (resourceType === "All" || resource.type === resourceType),
+    );
+  }, [resources, search, subject, year, semester, resourceType]);
+
   return (
     <div className="">
       <main className="md:w-[765px] px-10 mx-auto mt-20 mb-20">
@@ -50,11 +92,72 @@ export default function Resources() {
           Search any type of resource across the whole platform.
         </p>
         <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2 mt-20">
-          <Input placeholder="Search Resources..." />
-          <ComboboxInput />
-          <Input type="date" />
-          <Input type="number" placeholder="Semester..." min={1} max={8} />
-          <Select defaultValue="All">
+          <Input
+            placeholder="Search Resources..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={comboboxOpen}
+                className="w-full justify-between"
+              >
+                {subject.trim() ? subject : "Select Subject..."}
+                <ChevronsUpDown className="opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Search Subject..." className="h-9" />
+                <CommandList>
+                  <CommandEmpty>No Subject found.</CommandEmpty>
+                  <CommandGroup>
+                    {subjects.map((subj, idx) => (
+                      <CommandItem
+                        key={idx}
+                        value={subj}
+                        onSelect={(currentValue) => {
+                          setSubject(
+                            currentValue === subject ? "" : currentValue,
+                          );
+                          setComboboxOpen(false);
+                        }}
+                      >
+                        {subj}
+                        <Check
+                          className={cn(
+                            "ml-auto",
+                            subject === subj ? "opacity-100" : "opacity-0",
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <Input
+            type="date"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+          />
+          <Input
+            type="number"
+            placeholder="Semester..."
+            min={1}
+            max={8}
+            value={semester}
+            onChange={(e) => setSemester(e.target.value)}
+          />
+          <Select
+            defaultValue="All"
+            value={resourceType}
+            onValueChange={(value) => setResourceType(value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select resource type" />
             </SelectTrigger>
@@ -71,36 +174,67 @@ export default function Resources() {
           </Button>
         </div>
         <div className="mt-10 space-y-6">
-          {resources.map((resource, index) => {
-            return <ResourceCard key={index} {...resource} />;
-          })}
+          {isPending ? (
+            <div>Loading...</div>
+          ) : (
+            filteredResources.map((resource, index) => (
+              <ResourceCard key={index} {...resource} />
+            ))
+          )}
         </div>
       </main>
     </div>
   );
 }
 
+type ResourceCardProps = {
+  resourceid: number;
+  title: string;
+  description: string;
+  type: "Note" | "PYQ" | "Tutorial" | "Assignment" | "Miscellaneous";
+  uploaddate: string;
+  subject: string;
+  year: number;
+  semester: number;
+  urls: string[];
+  useremail: string;
+  username: string;
+  userimgurl?: string;
+};
+
 function ResourceCard({
-  resourceID,
-  userID,
+  resourceid,
   title,
   description,
   type,
+  uploaddate,
+  urls,
   subject,
-}: Resource) {
-  const user = users.find((user) => user.userID === userID);
-  if (!user) return;
-
+  useremail,
+  username,
+  userimgurl,
+}: ResourceCardProps) {
   return (
     <Card className="cursor-pointer">
-      <Link href={`resources/${resourceID}`}>
+      <Link href={`resources/${resourceid}`}>
         <CardContent>
           <div className="flex md:flex-row flex-col gap-6">
-            <div className="md:min-w-[256px] min-h-[256px] bg-secondary rounded-lg" />
+            <Image
+              width={1}
+              height={1}
+              src={`https://drive.google.com/thumbnail?id=${extractGoogleDriveFileID(urls[0])}`}
+              alt={title}
+              className="md:min-w-[256px] min-h-[256px] bg-secondary rounded-lg"
+            />
             <div className="flex flex-col justify-between gap-4">
               <div className="space-y-2">
                 <CardTitle className="text-xl">{title}</CardTitle>
-                <CardDescription>{description}</CardDescription>
+                <CardDescription>
+                  {new Date(uploaddate).toDateString()}
+                </CardDescription>
+                <CardDescription className="break-all line-clamp-3">
+                  {description}
+                </CardDescription>
                 <div className="flex"></div>
                 <div className="flex gap-2">
                   <Badge>{type}</Badge>
@@ -109,67 +243,17 @@ function ResourceCard({
               </div>
               <div className="flex gap-2 items-center">
                 <Avatar className="w-[40px] h-[40px]">
-                  <AvatarImage src="" />
+                  <AvatarImage src={userimgurl} />
                   <AvatarFallback>
-                    {user.email.slice(0, 2).toUpperCase()}
+                    {useremail.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span>{user.name}</span>
+                <span>{username}</span>
               </div>
             </div>
           </div>
         </CardContent>
       </Link>
     </Card>
-  );
-}
-function ComboboxInput() {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
-          {value
-            ? subjects.find((subject) => subject === value)
-            : "Select Subject..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
-        <Command>
-          <CommandInput placeholder="Search Subject..." className="h-9" />
-          <CommandList>
-            <CommandEmpty>No Subject found.</CommandEmpty>
-            <CommandGroup>
-              {subjects.map((subject, idx) => (
-                <CommandItem
-                  key={idx}
-                  value={subject}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  {subject}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === subject ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
   );
 }

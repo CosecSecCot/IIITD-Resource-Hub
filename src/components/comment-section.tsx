@@ -28,7 +28,7 @@ export function CommentSection({
   questionID,
   answerID,
 }: {
-  comments: UserCommentProps[];
+  comments: UserCommentProps[] | Record<string, unknown>[];
   resourceID?: number;
   blogID?: number;
   questionID?: number;
@@ -86,23 +86,48 @@ export function CommentSection({
 
     // Post new comment to the API endpoint
     let res: Response;
-    if (blogID) {
+    if (resourceID) {
+      res = await fetch("/api/comments/resource", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content,
+          userID: userID,
+          resourceID: resourceID,
+        }),
+      });
+    } else if (blogID) {
       res = await fetch("/api/comments/blog", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ content, userID: userID, blogID: blogID }),
+      });
+    } else if (questionID) {
+      res = await fetch("/api/comments/question", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content,
+          userID: userID,
+          questionID: questionID,
+        }),
       });
     } else {
-      res = await fetch("/api/comments/blog", {
+      res = await fetch("/api/comments/answer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content, userID: userID, blogID: blogID }),
+        body: JSON.stringify({ content, userID: userID, answerID: answerID }),
       });
     }
+
     if (res.ok) {
       toast("Comment added successfully!");
       form.reset();
