@@ -1,40 +1,72 @@
 import { notFound } from "next/navigation";
+import { neon } from "@neondatabase/serverless";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "next/link"; // Import Link for navigation
-
-import users from "@/data/users";
-import questions from "@/data/questions";
-import answers from "@/data/answers";
+import Link from "next/link";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Heart, HeartCrack } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
-import { Textarea } from "@/components/ui/textarea";
+import { AnswerForm } from "@/app/_components/answer-section";
+import {
+  getClerkUserData,
+  getDBUserFromCurrentClerkUser,
+} from "@/app/_actions/clerk";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuestionPage({
   params,
 }: {
-  params: Promise<{ questionID: string }>;
+  params: { questionID: string };
 }) {
-  const questionID = parseInt((await params).questionID, 10);
+  const sql = neon(process.env.DATABASE_URL!);
+  const questionID = parseInt(params.questionID, 10);
 
-  const question = questions.find((q) => q.questionID === questionID);
+  // eslint-disable-next-line prefer-const
+  let [questionResult, answersResult] = await Promise.all([
+    sql`SELECT * FROM Questions WHERE QuestionID = ${questionID}`,
+    sql`
+      SELECT
+        a.answerid,
+        a.content,
+        a.dateanswered,
+        a.upvote,
+        a.downvote,
+        a.verified,
+        a.questionid,
+        a.userid,
+        u.name AS username,
+        u.email AS useremail,
+        u.clerkuserid
+      FROM Answers a
+      INNER JOIN Users u ON a.userid = u.userid
+      WHERE a.questionid = ${questionID}
+      ORDER BY a.dateanswered DESC;
+    `,
+  ]);
+
+  answersResult = await Promise.all(
+    answersResult.map(async (answer) => ({
+      ...answer,
+      userimgurl: (await getClerkUserData(answer["clerkuserid"]))?.imageUrl,
+    })),
+  );
+
+  const question = questionResult[0];
   if (!question) notFound();
 
-  const user = users.find((u) => u.userID === question.userID);
+  const userResult =
+    await sql`SELECT * FROM Users WHERE UserID = ${question.userid}`;
+  const user = userResult[0];
   if (!user) notFound();
 
-  const answersToThisQuestion = answers.filter(
-    (a) => a.questionID === questionID,
-  );
+  // Assume logged in user (for answer posting) for now
+  const loggedInUserID = await getDBUserFromCurrentClerkUser();
 
   return (
     <div className="flex justify-center">
@@ -49,7 +81,7 @@ export default async function QuestionPage({
           <span>{user.name}</span>
         </div>
         <h1 className="text-4xl font-bold">{question.content}</h1>
-        <p>Asked on {new Date(question.dateAsked).toDateString()}</p>
+        <p>Asked on {new Date(question.dateasked).toDateString()}</p>
         <div className="flex space-x-4">
           <Toggle aria-label="Upvote" className="cursor-pointer">
             <Heart className="h-4 w-4" />
@@ -60,52 +92,47 @@ export default async function QuestionPage({
             {question.downvote}
           </Toggle>
         </div>
+
         <section className="space-y-8 mt-10">
           <h2 className="text-2xl font-semibold">Answers</h2>
-          <div className="space-y-2">
-            <Textarea placeholder="Write your answer here..." rows={10} />
-            <Button type="submit">Submit</Button>
-          </div>
-          {answersToThisQuestion.length === 0 && (
+          {loggedInUserID ? (
+            <AnswerForm
+              questionID={question.questionid}
+              userID={loggedInUserID["userid"]}
+            />
+          ) : (
+            ""
+          )}
+
+          {answersResult.length === 0 && (
             <p className="text-muted-foreground">
               No answers yet. Be the first to answer!
             </p>
           )}
 
-          {answersToThisQuestion.map((answer, idx) => {
-            const answerUser = users.find((u) => u.userID === answer.userID);
-
-            return (
-              <Card key={idx}>
-                <CardHeader>
-                  {answerUser ? (
-                    <div className="flex gap-2 items-center">
-                      <Avatar className="w-[40px] h-[40px]">
-                        <AvatarImage src={""} />
-                        <AvatarFallback>
-                          {answerUser.email?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{answerUser.name}</span>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2 items-center">
-                      <Skeleton className="h-[40px] w-[40px] rounded-full" />
-                      <Skeleton className="h-4 w-[250px]" />
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <p>{answer.content}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" asChild>
-                    <Link href={`/answer/${answer.answerID}`}>See More</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
+          {answersResult.map((answer) => (
+            <Card key={answer.answerid}>
+              <CardHeader>
+                <div className="flex gap-2 items-center">
+                  <Avatar className="w-[40px] h-[40px]">
+                    <AvatarImage src={answer.userimgurl} />
+                    <AvatarFallback>
+                      {answer.useremail.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{answer.username}</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p>{answer.content}</p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" asChild>
+                  <Link href={`/answer/${answer.answerid}`}>See More</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
         </section>
       </main>
     </div>
