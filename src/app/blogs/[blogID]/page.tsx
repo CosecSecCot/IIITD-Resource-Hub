@@ -6,6 +6,8 @@ import { Toggle } from "@/components/ui/toggle";
 import { neon } from "@neondatabase/serverless";
 import { getClerkUserData } from "@/app/_actions/clerk";
 
+export const dynamic = "force-dynamic";
+
 export default async function BlogPage({
   params,
 }: {

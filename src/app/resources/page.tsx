@@ -24,6 +24,8 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState, useTransition } from "react";
