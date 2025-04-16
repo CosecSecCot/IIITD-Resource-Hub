@@ -2,13 +2,35 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
-import blogs from "@/data/blogs";
-import { BlogCard } from "@/app/_components/blog-card";
+import { BlogCard, BlogCardProps } from "@/app/_components/blog-card";
 
 export default function Blogs() {
   const [search, setSearch] = useState("");
+  const [blogs, setBlogs] = useState<BlogCardProps[]>([]);
+  const [isPending, startTransition] = useTransition();
+
+  async function loadBlogs() {
+    try {
+      const res = await fetch(`/api/blogs`);
+      if (!res.ok) {
+        console.error("Error fetching blogs");
+        return;
+      }
+      const data = await res.json();
+      console.log(data);
+      setBlogs(data);
+    } catch (err) {
+      console.error("Failed to load blogs:", err);
+    }
+  }
+
+  useEffect(() => {
+    startTransition(() => {
+      loadBlogs();
+    });
+  }, []);
 
   const filteredBlogs = useMemo(() => {
     return blogs.filter(
@@ -16,7 +38,7 @@ export default function Blogs() {
         blog.title.toLowerCase().includes(search.toLowerCase()) ||
         blog.content.toLowerCase().includes(search.toLowerCase()),
     );
-  }, [search]);
+  }, [blogs, search]);
 
   return (
     <main className="md:w-[765px] px-10 mx-auto mt-20 mb-20">
@@ -35,9 +57,11 @@ export default function Blogs() {
         </Button>
       </div>
       <div className="mt-10 space-y-6">
-        {filteredBlogs.map((blog, index) => (
-          <BlogCard key={index} {...blog} />
-        ))}
+        {isPending ? (
+          <div>Loading...</div>
+        ) : (
+          filteredBlogs.map((blog, index) => <BlogCard key={index} {...blog} />)
+        )}
       </div>
     </main>
   );

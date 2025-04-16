@@ -1,29 +1,135 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Toggle } from "./ui/toggle";
 import { Heart, HeartCrack } from "lucide-react";
-import { Comment } from "@/data/schema";
-import users from "@/data/users";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-import commentReplies from "@/data/comments-on-comment";
-import allComments from "@/data/comments";
+export type UserCommentProps = {
+  commentid: number;
+  content: string;
+  date: string;
+  upvote: number;
+  downvote: number;
+  isdeleted: boolean;
+  useremail: string;
+  username: string;
+  userimgurl: string;
+  noReplies: boolean;
+};
 
-export function CommentSection({ comments }: { comments: Comment[] }) {
+export function CommentSection({
+  comments,
+  resourceID,
+  blogID,
+  questionID,
+  answerID,
+}: {
+  comments: UserCommentProps[];
+  resourceID?: number;
+  blogID?: number;
+  questionID?: number;
+  answerID?: number;
+}) {
+  // Count how many of the optional IDs are defined
+  const idCount =
+    Number(resourceID !== undefined) +
+    Number(blogID !== undefined) +
+    Number(questionID !== undefined) +
+    Number(answerID !== undefined);
+
+  if (idCount !== 1) {
+    throw new Error(
+      "Exactly one of resourceID, blogID, questionID, or answerID must be provided.",
+    );
+  }
+
+  const router = useRouter();
+
+  const [userID, setUserID] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      const res = await fetch("/api/currentDBUserID");
+      if (!res.ok) {
+        console.error("Failed to fetch DB user");
+        return;
+      }
+      const dbUser = await res.json();
+      setUserID(dbUser.userid);
+    }
+
+    fetchUser();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(e.currentTarget);
+    const content = (formData.get("comment") ?? "").toString();
+    if (!content.trim()) {
+      toast("Uh oh! Something went wrong.", {
+        description: "There was a problem creating the comment!",
+      });
+      return;
+    }
+
+    if (!userID) {
+      toast("Uh oh! Something went wrong.", {
+        description: "There was a problem creating the comment!",
+      });
+      return;
+    }
+
+    // Post new comment to the API endpoint
+    let res: Response;
+    if (blogID) {
+      res = await fetch("/api/comments/blog", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content, userID: userID, blogID: blogID }),
+      });
+    } else {
+      res = await fetch("/api/comments/blog", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content, userID: userID, blogID: blogID }),
+      });
+    }
+    if (res.ok) {
+      toast("Comment added successfully!");
+      form.reset();
+      router.refresh();
+    } else {
+      toast("Uh oh! Something went wrong.", {
+        description: "There was a problem creating the comment!",
+      });
+      console.error("Error creating comment");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold">Comments</h2>
-      <div className="space-y-4">
-        <Textarea placeholder="Add a Comment..." />
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <Textarea name="comment" placeholder="Add a Comment..." />
         <Button type="submit">Submit</Button>
-      </div>
+      </form>
       <div className="space-y-6 overflow-x-scroll px-2 py-4">
         {comments.map((comment, index) => {
           if (!comment) return;
+          console.log(`comment ${index}:`, comment);
           return (
-            <UserComment key={index} comment={comment} noReplies={false} />
+            <Suspense key={index} fallback={<div>Loading...</div>}>
+              <UserComment key={index} {...comment} noReplies={false} />
+            </Suspense>
           );
         })}
       </div>
@@ -32,48 +138,58 @@ export function CommentSection({ comments }: { comments: Comment[] }) {
 }
 
 export function UserComment({
-  comment,
+  commentid,
+  content,
+  date,
+  upvote,
+  downvote,
+  isdeleted,
+  useremail,
+  username,
+  userimgurl,
   noReplies = false,
-}: {
-  comment: Comment;
-  noReplies: boolean;
-}) {
-  const { commentID, content, date, upvote, downvote, isDeleted, userID } =
-    comment;
-
-  const user = users.find((user) => user.userID === userID);
+}: UserCommentProps) {
   const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies] = useState<UserCommentProps[]>([]);
+  const [isPending, startTransition] = useTransition();
 
-  // Find all reply relationships for the current comment.
-  const replyRelations = commentReplies.filter(
-    (rel) => rel.parentCommentID === commentID,
-  );
-  // For each found relation, find the full comment details from allComments.
-  const replies = replyRelations
-    .map((rel) => allComments.find((c) => c.commentID === rel.commentID))
-    .filter((c): c is Comment => c !== undefined); // Filter out any potential undefined values
-
-  if (!user) {
-    return;
+  async function loadReplies() {
+    try {
+      const res = await fetch(`/api/comments/${commentid}/replies`);
+      if (!res.ok) {
+        console.error("Error fetching replies");
+        return;
+      }
+      const data: UserCommentProps[] = await res.json();
+      setReplies(data);
+    } catch (err) {
+      console.error("Failed to load replies:", err);
+    }
   }
+
+  const handleShowReplies = () => {
+    setShowReplies(true);
+    startTransition(() => {
+      loadReplies();
+    });
+  };
+
   return (
     <div className="flex flex-col pt-2 items-start">
       <div className="flex items-start gap-4">
         <Avatar className="h-10 w-10 border">
-          <AvatarImage src="" />
-          <AvatarFallback>
-            {user.email.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
+          <AvatarImage src={userimgurl} />
+          <AvatarFallback>{useremail.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="grid gap-1.5">
           <div className="flex items-center gap-2">
-            <div className="font-bold">{user.name}</div>
+            <div className="font-bold">{username}</div>
             <div className="text-xs text-muted-foreground">
               {new Date(date).toDateString()}
             </div>
           </div>
-          <div className={`text-sm ${isDeleted ? "italic" : ""}`}>
-            {isDeleted ? "This comment is deleted" : content}
+          <div className={`text-sm ${isdeleted ? "italic" : ""}`}>
+            {isdeleted ? "This comment is deleted" : content}
           </div>
           <div className="flex space-x-2">
             <Toggle aria-label="Upvote" size="sm" className="cursor-pointer">
@@ -85,10 +201,10 @@ export function UserComment({
               {downvote}
             </Toggle>
           </div>
-          {replies.length > 0 && !showReplies && !noReplies && (
+          {!showReplies && !noReplies && (
             <Button
               variant="outline"
-              onClick={() => setShowReplies(!showReplies)}
+              onClick={handleShowReplies}
               className="mt-2 w-fit cursor-pointer"
             >
               Show Replies
@@ -98,13 +214,19 @@ export function UserComment({
       </div>
       {showReplies &&
         !noReplies &&
-        replies.map((reply) => (
-          <div
-            className="pt-4 ml-5 pl-11 border-l border-[#c4c4c5]"
-            key={reply.commentID}
-          >
-            <UserComment comment={reply} noReplies={noReplies} />
+        (isPending ? (
+          <div className="pt-4 ml-5 pl-11 border-l border-[#c4c4c5]">
+            Loading Replies...
           </div>
+        ) : (
+          replies.map((reply, index) => (
+            <div
+              className="pt-4 ml-5 pl-11 border-l border-[#c4c4c5]"
+              key={index}
+            >
+              <UserComment {...reply} noReplies={noReplies} />
+            </div>
+          ))
         ))}
     </div>
   );

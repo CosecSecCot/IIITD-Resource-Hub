@@ -1,4 +1,5 @@
-import { clerkClient } from "@clerk/nextjs/server";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
+import { neon } from "@neondatabase/serverless";
 
 export async function getClerkUserData(userID: string) {
   try {
@@ -8,4 +9,20 @@ export async function getClerkUserData(userID: string) {
     console.log(`Error getting clerk user, userID: ${userID}`);
     return undefined;
   }
+}
+
+export async function getDBUserFromCurrentClerkUser() {
+  const user = await currentUser();
+
+  if (!user) return undefined;
+
+  const sql = neon(process.env.DATABASE_URL!);
+  const dbUser = (
+    await sql`
+    SELECT * FROM Users
+    WHERE clerkuserid=${user.id}
+  `
+  )[0];
+
+  return dbUser;
 }

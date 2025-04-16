@@ -13,11 +13,8 @@ import { ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import resources from "@/data/resources";
-import blogs from "@/data/blogs";
 import questions from "@/data/questions";
-import comments from "@/data/comments";
 import { UserComment } from "@/components/comment-section";
-import commentReplies from "@/data/comments-on-comment";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,29 +37,57 @@ export default async function Page({
   if (!user) {
     notFound();
   }
-  console.log(user);
 
   const clerkCurrentUser = await getClerkUserData(user["clerkuserid"]);
 
   const userResources = resources.filter(
     (resource) => resource.userID === userID,
   );
-  const userBlogs = blogs.filter((blog) => blog.userID === userID);
+  const userBlogs = await sql`
+    SELECT * FROM Blog
+    WHERE userid=${userID}
+    `;
   const userQuestions = questions.filter((ques) => ques.userID === userID);
-  const userComments = comments.filter((comment) => comment.userID === userID);
 
-  // Get an array of IDs for comments authored by the user.
-  const userCommentIDs = userComments.map((c) => c.commentID);
-
-  // Filter the reply mapping to get replies to any of the user's comments.
-  const repliesMappings = commentReplies.filter((mapping) =>
-    userCommentIDs.includes(mapping.parentCommentID),
+  let userComments = await sql`
+    SELECT c.commentid, c.content, c.date, c.upvote, c.downvote, c.isdeleted,
+      u.email AS useremail, u.name AS username, u.clerkuserid
+    FROM Comment c
+    INNER JOIN Users u ON c.userid = u.userid
+    WHERE c.userid=${userID}
+  `;
+  userComments = await Promise.all(
+    userComments.map(async (comment) => ({
+      ...comment,
+      userimgurl: (await getClerkUserData(comment["clerkuserid"]))?.imageUrl,
+    })),
   );
 
-  // For each mapping, find the reply comment.
-  const userReplies = repliesMappings
-    .map((mapping) => comments.find((c) => c.commentID === mapping.commentID))
-    .filter((reply): reply is (typeof comments)[0] => Boolean(reply));
+  let userReplies = await sql`
+    SELECT
+      c.commentid,
+      c.content,
+      c.date,
+      c.upvote,
+      c.downvote,
+      c.isdeleted,
+      u.email AS useremail,
+      u.name AS username,
+      u.clerkuserid
+    FROM CommentOnComment cc
+    INNER JOIN Comment c ON cc.CommentID = c.commentid
+    INNER JOIN Users u ON c.userid = u.userid
+    WHERE cc.ParentCommentID IN (
+      SELECT commentid FROM Comment WHERE userid=${userID}
+    );
+  `;
+
+  userReplies = await Promise.all(
+    userReplies.map(async (comment) => ({
+      ...comment,
+      userimgurl: (await getClerkUserData(comment["clerkuserid"]))?.imageUrl,
+    })),
+  );
 
   return (
     <div>
@@ -184,13 +209,16 @@ export default async function Page({
                     </TableHeader>
                     <TableBody>
                       {userBlogs.map((blog, idx) => {
+                        console.log(blog);
                         return (
                           <TableRow key={idx}>
-                            <TableCell>{blog.title}</TableCell>
-                            <TableCell>{blog.dateCreated}</TableCell>
-                            <TableCell>{blog.views}</TableCell>
-                            <TableCell>{blog.upvote}</TableCell>
-                            <TableCell>{blog.downvote}</TableCell>
+                            <TableCell>{blog["title"]}</TableCell>
+                            <TableCell>
+                              {new Date(blog["datecreated"]).toDateString()}
+                            </TableCell>
+                            <TableCell>{blog["views"]}</TableCell>
+                            <TableCell>{blog["upvote"]}</TableCell>
+                            <TableCell>{blog["downvote"]}</TableCell>
                             <TableCell>
                               <Button
                                 aria-haspopup="true"
@@ -250,7 +278,7 @@ export default async function Page({
               <h2 className="text-3xl font-bold">Your Activity</h2>
               <div className="space-y-4 my-4 h-[256px] overflow-y-scroll">
                 {userComments.map((comment, idx) => (
-                  <UserComment key={idx} comment={comment} noReplies />
+                  <UserComment key={idx} {...comment} noReplies />
                 ))}
               </div>
             </section>
@@ -258,7 +286,7 @@ export default async function Page({
               <h2 className="text-3xl font-bold">Catch Up</h2>
               <div className="space-y-4 my-4 h-[256px] overflow-y-scroll">
                 {userReplies.map((comment, idx) => (
-                  <UserComment key={idx} comment={comment} noReplies />
+                  <UserComment key={idx} {...comment} noReplies />
                 ))}
               </div>
             </section>

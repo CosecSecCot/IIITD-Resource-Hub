@@ -24,7 +24,7 @@ export default async function Page({
   }
   const currentComments = commentOnResource
     .filter((comment) => comment.resourceID == resourceID)
-    .map(({ commentID }) => comments.find((cmt) => cmt.commentID == commentID))
+    .map(({ commentID }) => comments.find((cmt) => cmt.commentid == commentID))
     .filter((comment) => comment != undefined);
 
   if (!user) {
