@@ -25,20 +25,17 @@ export function CommentSection({
   comments,
   resourceID,
   blogID,
-  questionID,
   answerID,
 }: {
   comments: UserCommentProps[] | Record<string, unknown>[];
   resourceID?: number;
   blogID?: number;
-  questionID?: number;
   answerID?: number;
 }) {
   // Count how many of the optional IDs are defined
   const idCount =
     Number(resourceID !== undefined) +
     Number(blogID !== undefined) +
-    Number(questionID !== undefined) +
     Number(answerID !== undefined);
 
   if (idCount !== 1) {
@@ -105,18 +102,6 @@ export function CommentSection({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ content, userID: userID, blogID: blogID }),
-      });
-    } else if (questionID) {
-      res = await fetch("/api/comments/question", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content,
-          userID: userID,
-          questionID: questionID,
-        }),
       });
     } else {
       res = await fetch("/api/comments/answer", {
