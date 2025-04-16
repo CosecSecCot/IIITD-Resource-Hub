@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { BlogCard, BlogCardProps } from "@/app/_components/blog-card";
 
+export const dynamic = "force-dynamic";
+
 export default function Blogs() {
   const [search, setSearch] = useState("");
   const [blogs, setBlogs] = useState<BlogCardProps[]>([]);
