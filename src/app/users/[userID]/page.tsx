@@ -12,8 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import resources from "@/data/resources";
-import questions from "@/data/questions";
 import { UserComment } from "@/components/comment-section";
 import {
   DropdownMenu,
@@ -23,7 +21,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
-import { getClerkUserData } from "@/app/_actions/clerk";
+import {
+  getClerkUserData,
+  getDBUserFromCurrentClerkUser,
+} from "@/app/_actions/clerk";
 
 export const dynamic = "force-dynamic";
 
@@ -42,14 +43,19 @@ export default async function Page({
 
   const clerkCurrentUser = await getClerkUserData(user["clerkuserid"]);
 
-  const userResources = resources.filter(
-    (resource) => resource.userID === userID,
-  );
+  const userResources = await sql`
+  SELECT * FROM Resource WHERE userid=${userID}
+`;
+  console.log(userResources);
+
   const userBlogs = await sql`
     SELECT * FROM Blog
     WHERE userid=${userID}
     `;
-  const userQuestions = questions.filter((ques) => ques.userID === userID);
+  const userQuestions = await sql`
+SELECT * FROM Questions WHERE userid=${userID}
+`;
+  console.log(userQuestions);
 
   const userCommentsResult = await sql`
     SELECT c.commentid, c.content, c.date, c.upvote, c.downvote, c.isdeleted,
@@ -122,7 +128,12 @@ export default async function Page({
               </p>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="w-full">Create</Button>
+                  {userID ===
+                  (await getDBUserFromCurrentClerkUser())?.userid ? (
+                    <Button className="w-full">Create</Button>
+                  ) : (
+                    ""
+                  )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem asChild>
@@ -170,7 +181,9 @@ export default async function Page({
                         return (
                           <TableRow key={idx}>
                             <TableCell>{resource.title}</TableCell>
-                            <TableCell>{resource.uploadDate}</TableCell>
+                            <TableCell>
+                              {new Date(resource.uploaddate).toDateString()}
+                            </TableCell>
                             <TableCell>
                               <div className="flex gap-2 flex-wrap">
                                 <Badge>{resource.type}</Badge>
@@ -255,7 +268,9 @@ export default async function Page({
                         return (
                           <TableRow key={idx}>
                             <TableCell>{ques.content}</TableCell>
-                            <TableCell>{ques.dateAsked}</TableCell>
+                            <TableCell>
+                              {new Date(ques.dateasked).toDateString()}
+                            </TableCell>
                             <TableCell>{ques.upvote}</TableCell>
                             <TableCell>{ques.downvote}</TableCell>
                             <TableCell>
