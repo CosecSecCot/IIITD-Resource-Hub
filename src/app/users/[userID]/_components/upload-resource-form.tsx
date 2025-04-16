@@ -1,20 +1,21 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import {
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormField,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -23,50 +24,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Define schema
 const resourceSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  type: z.enum(["Note", "PYQ", "Tutorial", "Miscellaneous"]),
-  subject: z.string().min(1, "Subject is required"),
-  year: z.coerce
-    .number({
-      required_error: "Year is required",
-      invalid_type_error: "Year must be a number",
-    })
-    .min(2008, "Year must be at least 2008")
-    .max(new Date().getFullYear(), "Year cannot be in the future"),
-  semester: z.coerce
-    .number({
-      required_error: "Semester is required",
-      invalid_type_error: "Semester must be a number",
-    })
-    .min(1, "Semester cannot be less than 1")
-    .max(8, "Semester cannot be greater than 8"),
-  resourceFiles: z
-    .array(
-      z
-        .string()
-        .url({ message: "Must be a valid URL" })
-        .refine((url) => url.includes("drive.google.com"), {
-          message: "Must be a Google Drive link",
-        }),
-    )
-    .min(1, "At least one Google Drive link is required"),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  type: z.enum(["Note", "PYQ", "Tutorial", "Assignment", "Miscellaneous"]),
+  subject: z.string().min(1),
+  year: z.number().min(2008).max(new Date().getFullYear()),
+  semester: z.number().min(1).max(8),
+  resourceFiles: z.array(z.string().url()),
 });
 
-export type ResourceFormData = z.infer<typeof resourceSchema>;
+type ResourceFormData = z.infer<typeof resourceSchema>;
 
 interface UploadResourceFormProps {
   userID: number;
-  initialData?: Partial<Omit<ResourceFormData, "resourceFiles">> & {
-    resourceFiles?: string[];
-  };
+  initialData?: Partial<ResourceFormData> & { resourceID: number };
 }
 
 export default function UploadResourceForm({
   userID,
   initialData,
 }: UploadResourceFormProps) {
+  const router = useRouter();
+
   const form = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
     defaultValues: {
@@ -80,17 +61,34 @@ export default function UploadResourceForm({
     },
   });
 
-  // useFieldArray to handle dynamic array of resourceFiles.
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "resourceFiles" as never,
   });
 
-  const onSubmit = (values: ResourceFormData) => {
-    if (initialData) {
-      console.log("Updated resource:", { userID, ...values });
+  const onSubmit = async (values: ResourceFormData) => {
+    const endpoint = initialData?.resourceID
+      ? `/api/resources/${initialData.resourceID}`
+      : "/api/resources";
+    const method = initialData?.resourceID ? "PUT" : "POST";
+
+    const res = await fetch(endpoint, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userID, ...values }),
+    });
+
+    if (res.ok) {
+      toast(
+        `Resource ${method === "POST" ? "created" : "updated"} successfully!`,
+      );
+      router.push(`/users/${userID}`);
     } else {
-      console.log("Submitted resource:", { userID, ...values });
+      toast("Uh oh! Something went wrong.", {
+        description: "There was a problem updating the blog!",
+      });
     }
   };
 
@@ -136,11 +134,7 @@ export default function UploadResourceForm({
             <FormItem>
               <FormLabel>Type</FormLabel>
               <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select resource type" />
                   </SelectTrigger>
@@ -164,7 +158,7 @@ export default function UploadResourceForm({
             <FormItem>
               <FormLabel>Subject</FormLabel>
               <FormControl>
-                <Input placeholder="Enter subject name" {...field} />
+                <Input placeholder="Enter subject" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -201,7 +195,6 @@ export default function UploadResourceForm({
           />
         </div>
 
-        {/* Resource Files: Dynamic array of Google Drive links */}
         <div className="space-y-4">
           <FormLabel>Google Drive Links</FormLabel>
           {fields.map((field, index) => (

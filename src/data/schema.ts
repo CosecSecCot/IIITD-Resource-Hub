@@ -25,24 +25,24 @@ export interface ResourceFile {
 }
 
 export interface Comment {
-  commentID: number;
+  commentid: number;
   content: string;
   date: string;
   upvote: number;
   downvote: number;
-  isDeleted: boolean;
-  userID: number;
+  isdeleted: boolean;
+  userid: number;
 }
 
 export interface Blog {
-  blogID: number;
+  blogid: number;
   title: string;
   content: string;
-  dateCreated: string;
+  datecreated: string;
   views: number;
   upvote: number;
   downvote: number;
-  userID: number;
+  userid: number;
 }
 
 export interface Question {

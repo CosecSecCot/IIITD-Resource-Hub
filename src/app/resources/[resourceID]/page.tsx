@@ -1,10 +1,12 @@
+import { getClerkUserData } from "@/app/_actions/clerk";
+import { extractGoogleDriveFileID } from "@/app/_actions/utils";
 import { CommentSection } from "@/components/comment-section";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import comments from "@/data/comments";
-import commentOnResource from "@/data/comments-on-resource";
-import resources from "@/data/resources";
-import users from "@/data/users";
+import { neon } from "@neondatabase/serverless";
+import { Download } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export default async function Page({
@@ -14,22 +16,48 @@ export default async function Page({
 }) {
   const resourceID = parseInt((await params).resourceID, 10);
 
-  const resource = resources.find((res) => res.resourceID == resourceID);
-  if (!resource) {
-    notFound();
-  }
-  const user = users.find((user) => user.userID === resource.userID);
-  if (!user) {
-    notFound();
-  }
-  const currentComments = commentOnResource
-    .filter((comment) => comment.resourceID == resourceID)
-    .map(({ commentID }) => comments.find((cmt) => cmt.commentID == commentID))
-    .filter((comment) => comment != undefined);
+  const sql = neon(process.env.DATABASE_URL!);
 
-  if (!user) {
-    notFound();
-  }
+  const resource = (
+    await sql`
+    SELECT * FROM Resource
+    WHERE resourceid=${resourceID}
+  `
+  )[0];
+  if (!resource) notFound();
+
+  const resourcefiles = await sql`
+    SELECT * FROM ResourceFile
+    WHERE resourceid=${resourceID}
+  `;
+  console.log(resourcefiles);
+
+  const user = (
+    await sql`
+    SELECT * FROM Users
+    WHERE userid=${resource["userid"]}
+  `
+  )[0];
+  if (!user) notFound();
+  const clerkCurrentUser = await getClerkUserData(user["clerkuserid"]);
+
+  let currentComments = await sql`
+    SELECT
+      c.commentid, c.content, c.date, c.upvote, c.downvote, c.isdeleted, c.userid,
+      u.name AS username, u.email AS useremail, u.clerkuserid
+    FROM CommentOnResource cr
+    INNER JOIN Comment c ON cr.commentid = c.commentid
+    INNER JOIN Users u ON c.userid = u.userid
+    WHERE cr.resourceid=${resourceID}; -- Replace with desired resourceID
+    `;
+
+  currentComments = await Promise.all(
+    currentComments.map(async (comment) => ({
+      ...comment,
+      userimgurl: (await getClerkUserData(comment["clerkuserid"]))?.imageUrl,
+    })),
+  );
+  console.log(currentComments);
 
   return (
     <div>
@@ -37,15 +65,15 @@ export default async function Page({
         <main className="md:w-[765px] w-full px-10 mt-10 mb-20 space-y-6">
           <div className="flex gap-2 items-center">
             <Avatar className="w-[48px] h-[48px]">
-              <AvatarImage src="" />
+              <AvatarImage src={clerkCurrentUser?.imageUrl} />
               <AvatarFallback>
-                {user.email.slice(0, 2).toUpperCase()}
+                {user["email"].slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <span>{user.name}</span>
           </div>
           <h1 className="text-5xl font-bold">{resource.title}</h1>
-          <p className="">
+          <p className="break-all">
             {resource.description}
             <br />
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat
@@ -57,12 +85,34 @@ export default async function Page({
             <Badge>{resource.type}</Badge>
             <Badge variant="secondary">{resource.subject}</Badge>
           </div>
-          <div className="w-full flex gap-6 flex-wrap">
-            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
-            <div className="min-w-[192px] aspect-square rounded-xl bg-secondary" />
+          <div className="flex gap-2 flex-wrap">
+            <span>{resource.year ? resource.year : ""}</span>
+            <span>
+              {resource.semester ? `Semester ${resource.semester}` : ""}
+            </span>
           </div>
-          <CommentSection comments={currentComments} />
+          <div className="w-full flex gap-6 flex-wrap">
+            {resourcefiles.map((file, idx) => (
+              <Link
+                href={file["url"]}
+                key={idx}
+                target="_blank"
+                className="relative min-w-[192px] aspect-square rounded-xl overflow-hidden flex justify-center"
+              >
+                <div className="absolute top-[50%] left-[50%] rounded-full bg-secondary opacity-50 p-6">
+                  <Download />
+                </div>
+                <Image
+                  width={1}
+                  height={1}
+                  src={`https://drive.google.com/thumbnail?id=${extractGoogleDriveFileID(file["url"])}`}
+                  alt=""
+                  className="w-full h-full"
+                />
+              </Link>
+            ))}
+          </div>
+          <CommentSection comments={currentComments} resourceID={resourceID} />
         </main>
       </div>
     </div>

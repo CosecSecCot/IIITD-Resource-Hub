@@ -25,7 +25,7 @@ export default async function AnswerPage({
   // Get comments related to the answer
   const answerComments = commentOnAnswer
     .filter((entry) => entry.answerID === answer.answerID)
-    .map(({ commentID }) => comments.find((c) => c.commentID === commentID))
+    .map(({ commentID }) => comments.find((c) => c.commentid === commentID))
     .filter((c) => c != undefined);
 
   return (
@@ -58,7 +58,7 @@ export default async function AnswerPage({
           {answerComments.length === 0 ? (
             <p className="text-muted-foreground">No comments yet.</p>
           ) : (
-            <CommentSection comments={answerComments} />
+            <CommentSection comments={[]} />
           )}
         </section>
       </main>

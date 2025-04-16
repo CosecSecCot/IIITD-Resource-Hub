@@ -12,13 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import users from "@/data/users";
 import resources from "@/data/resources";
-import blogs from "@/data/blogs";
 import questions from "@/data/questions";
-import comments from "@/data/comments";
 import { UserComment } from "@/components/comment-section";
-import commentReplies from "@/data/comments-on-comment";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { neon } from "@neondatabase/serverless";
+import { getClerkUserData } from "@/app/_actions/clerk";
 
 export default async function Page({
   params,
@@ -33,31 +31,63 @@ export default async function Page({
   params: Promise<{ userID: string }>; // userID from the URL
 }) {
   const userID = parseInt((await params).userID, 10);
-  const user = users.find((user) => user.userID === userID);
+
+  const sql = neon(process.env.DATABASE_URL!);
+  const user = (await sql`SELECT * FROM Users WHERE userid=${userID}`)[0];
+  if (!user) {
+    notFound();
+  }
+
+  const clerkCurrentUser = await getClerkUserData(user["clerkuserid"]);
 
   const userResources = resources.filter(
     (resource) => resource.userID === userID,
   );
-  const userBlogs = blogs.filter((blog) => blog.userID === userID);
+  const userBlogs = await sql`
+    SELECT * FROM Blog
+    WHERE userid=${userID}
+    `;
   const userQuestions = questions.filter((ques) => ques.userID === userID);
-  const userComments = comments.filter((comment) => comment.userID === userID);
 
-  // Get an array of IDs for comments authored by the user.
-  const userCommentIDs = userComments.map((c) => c.commentID);
-
-  // Filter the reply mapping to get replies to any of the user's comments.
-  const repliesMappings = commentReplies.filter((mapping) =>
-    userCommentIDs.includes(mapping.parentCommentID),
+  const userCommentsResult = await sql`
+    SELECT c.commentid, c.content, c.date, c.upvote, c.downvote, c.isdeleted,
+      u.email AS useremail, u.name AS username, u.clerkuserid
+    FROM Comment c
+    INNER JOIN Users u ON c.userid = u.userid
+    WHERE c.userid=${userID}
+  `;
+  const userComments = await Promise.all(
+    userCommentsResult.map(async (comment) => ({
+      ...comment,
+      userimgurl: (await getClerkUserData(comment["clerkuserid"]))?.imageUrl,
+    })),
   );
 
-  // For each mapping, find the reply comment.
-  const userReplies = repliesMappings
-    .map((mapping) => comments.find((c) => c.commentID === mapping.commentID))
-    .filter((reply): reply is (typeof comments)[0] => Boolean(reply));
+  let userReplies = await sql`
+    SELECT
+      c.commentid,
+      c.content,
+      c.date,
+      c.upvote,
+      c.downvote,
+      c.isdeleted,
+      u.email AS useremail,
+      u.name AS username,
+      u.clerkuserid
+    FROM CommentOnComment cc
+    INNER JOIN Comment c ON cc.CommentID = c.commentid
+    INNER JOIN Users u ON c.userid = u.userid
+    WHERE cc.ParentCommentID IN (
+      SELECT commentid FROM Comment WHERE userid=${userID}
+    );
+  `;
 
-  if (!user) {
-    notFound();
-  }
+  userReplies = await Promise.all(
+    userReplies.map(async (comment) => ({
+      ...comment,
+      userimgurl: (await getClerkUserData(comment["clerkuserid"]))?.imageUrl,
+    })),
+  );
 
   return (
     <div>
@@ -65,26 +95,27 @@ export default async function Page({
         <main className="flex lg:flex-row flex-col justify-around gap-8 md:w-[80vw] w-full px-10 mt-10 mb-20 space-y-6">
           <div className="space-y-4">
             <Avatar className="w-[256px] h-[256px] text-5xl">
-              <AvatarImage src="" />
+              <AvatarImage src={clerkCurrentUser?.imageUrl} />
               <AvatarFallback>
-                {user.email.slice(0, 2).toUpperCase()}
+                {user["email"].slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-4">
               <h1>
                 <span className="text-2xl block">{user.name}</span>
                 <span className="text-xl text-secondary-foreground block">
-                  {user.email}
+                  {user["email"]}
                 </span>
               </h1>
               <p>
                 <span className="text-lg text-secondary-foreground block">
-                  Registered: {user.registrationDate}
+                  Registered:{" "}
+                  {new Date(user["registrationdate"]).toDateString()}
                 </span>
                 <span
-                  className={`text-lg font-bold block ${user.contribution > 0 ? "text-green-600" : "text-destructive"}`}
+                  className={`text-lg font-bold block ${user["contribution"] >= 0 ? "text-green-600" : "text-destructive"}`}
                 >
-                  Contribution: {user.contribution}
+                  Contribution: {user["contribution"]}
                 </span>
               </p>
               <DropdownMenu>
@@ -178,13 +209,16 @@ export default async function Page({
                     </TableHeader>
                     <TableBody>
                       {userBlogs.map((blog, idx) => {
+                        console.log(blog);
                         return (
                           <TableRow key={idx}>
-                            <TableCell>{blog.title}</TableCell>
-                            <TableCell>{blog.dateCreated}</TableCell>
-                            <TableCell>{blog.views}</TableCell>
-                            <TableCell>{blog.upvote}</TableCell>
-                            <TableCell>{blog.downvote}</TableCell>
+                            <TableCell>{blog["title"]}</TableCell>
+                            <TableCell>
+                              {new Date(blog["datecreated"]).toDateString()}
+                            </TableCell>
+                            <TableCell>{blog["views"]}</TableCell>
+                            <TableCell>{blog["upvote"]}</TableCell>
+                            <TableCell>{blog["downvote"]}</TableCell>
                             <TableCell>
                               <Button
                                 aria-haspopup="true"
@@ -244,7 +278,7 @@ export default async function Page({
               <h2 className="text-3xl font-bold">Your Activity</h2>
               <div className="space-y-4 my-4 h-[256px] overflow-y-scroll">
                 {userComments.map((comment, idx) => (
-                  <UserComment key={idx} comment={comment} noReplies />
+                  <UserComment key={idx} {...comment} noReplies />
                 ))}
               </div>
             </section>
@@ -252,7 +286,7 @@ export default async function Page({
               <h2 className="text-3xl font-bold">Catch Up</h2>
               <div className="space-y-4 my-4 h-[256px] overflow-y-scroll">
                 {userReplies.map((comment, idx) => (
-                  <UserComment key={idx} comment={comment} noReplies />
+                  <UserComment key={idx} {...comment} noReplies />
                 ))}
               </div>
             </section>

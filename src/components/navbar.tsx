@@ -64,7 +64,7 @@ export function Navbar({ children }: { children: React.ReactNode }) {
               <UserButton.Link
                 label="View Profile"
                 labelIcon={<User />}
-                href="/users/1"
+                href={`/users/${1}`}
               />
             </UserButton.MenuItems>
           </UserButton>
