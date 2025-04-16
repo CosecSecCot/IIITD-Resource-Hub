@@ -3,6 +3,8 @@ import users from "@/data/users";
 import { QuestionForm } from "@/app/users/[userID]/_components/ask-question-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   params,
 }: {

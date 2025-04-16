@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { neon } from "@neondatabase/serverless";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   params,
 }: {

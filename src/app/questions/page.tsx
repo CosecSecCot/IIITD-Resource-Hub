@@ -7,6 +7,8 @@ import { useMemo, useState } from "react";
 import questions from "@/data/questions"; // this is your array
 import { QuestionCard } from "@/app/_components/question-card";
 
+export const dynamic = "force-dynamic";
+
 export default function QuestionsPage() {
   const [search, setSearch] = useState("");
 

@@ -17,6 +17,8 @@ import { Heart, HeartCrack } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Textarea } from "@/components/ui/textarea";
 
+export const dynamic = "force-dynamic";
+
 export default async function QuestionPage({
   params,
 }: {

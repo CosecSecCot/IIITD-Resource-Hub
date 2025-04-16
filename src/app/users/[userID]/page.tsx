@@ -25,6 +25,8 @@ import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 import { getClerkUserData } from "@/app/_actions/clerk";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   params,
 }: {

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getClerkUserData } from "@/app/_actions/clerk";
 import { neon } from "@neondatabase/serverless";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   params,
 }: {

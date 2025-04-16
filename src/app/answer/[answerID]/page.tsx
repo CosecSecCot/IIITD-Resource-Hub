@@ -9,6 +9,8 @@ import commentOnAnswer from "@/data/comments-on-answer";
 import { Toggle } from "@/components/ui/toggle";
 import { Heart, HeartCrack } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AnswerPage({
   params,
 }: {
