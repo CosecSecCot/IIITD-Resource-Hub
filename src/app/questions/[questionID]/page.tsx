@@ -22,10 +22,10 @@ export const dynamic = "force-dynamic";
 export default async function QuestionPage({
   params,
 }: {
-  params: { questionID: string };
+  params: Promise<{ questionID: string }>;
 }) {
   const sql = neon(process.env.DATABASE_URL!);
-  const questionID = parseInt(params.questionID, 10);
+  const questionID = parseInt((await params).questionID, 10);
 
   // eslint-disable-next-line prefer-const
   let [questionResult, answersResult] = await Promise.all([

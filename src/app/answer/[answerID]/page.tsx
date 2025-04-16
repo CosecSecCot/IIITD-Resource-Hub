@@ -2,15 +2,6 @@ import { notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import { getClerkUserData } from "@/app/_actions/clerk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Heart, HeartCrack } from "lucide-react";
 import { CommentSection } from "@/components/comment-section";
