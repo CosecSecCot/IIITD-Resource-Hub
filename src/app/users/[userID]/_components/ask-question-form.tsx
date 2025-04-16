@@ -14,8 +14,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-// Define the question schema.
 const questionSchema = z.object({
   title: z.string().min(1, "Title is required"),
   question: z.string().min(1, "Please enter your question details"),
@@ -23,38 +24,62 @@ const questionSchema = z.object({
 
 type QuestionFormData = z.infer<typeof questionSchema>;
 
+export interface QuestionData extends QuestionFormData {
+  questionID?: number;
+}
+
 interface QuestionFormProps {
   userID: number;
-  // Accept optional initial data for edit mode.
-  initialData?: Partial<QuestionFormData>;
+  initialData?: QuestionData;
 }
 
 export function QuestionForm({ userID, initialData }: QuestionFormProps) {
-  // Set up default values ensuring they are never undefined.
-  const defaultValues: QuestionFormData = {
-    title: initialData?.title ?? "",
-    question: initialData?.question ?? "",
-  };
-
+  const router = useRouter();
   const form = useForm<QuestionFormData>({
     resolver: zodResolver(questionSchema),
-    defaultValues,
+    defaultValues: {
+      title: initialData?.title ?? "",
+      question: initialData?.question ?? "",
+    },
   });
 
-  const onSubmit = async (data: QuestionFormData) => {
-    if (initialData) {
-      console.log("Updated question:", { userID, ...data });
+  const onSubmit = async (values: QuestionFormData) => {
+    if (initialData?.questionID) {
+      const res = await fetch(`/api/questions/${initialData.questionID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userID, ...values }),
+      });
+      if (res.ok) {
+        toast("Question updated successfully!");
+      } else {
+        toast("Uh oh! Something went wrong.", {
+          description: "There was a problem updating the question.",
+        });
+      }
     } else {
-      console.log("Submitted question:", { userID, ...data });
+      const res = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userID, ...values }),
+      });
+      if (res.ok) {
+        toast("Question created successfully!");
+      } else {
+        toast("Uh oh! Something went wrong.", {
+          description: "There was a problem creating the question.",
+        });
+      }
     }
+    router.push(`/users/${userID}`);
   };
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6"
         noValidate
+        className="space-y-6"
       >
         <FormField
           control={form.control}

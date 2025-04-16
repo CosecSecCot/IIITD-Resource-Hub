@@ -6,7 +6,6 @@ import questions from "@/data/questions";
 import comments from "@/data/comments";
 import blogs from "@/data/blogs";
 import Link from "next/link";
-import { QuestionCard } from "@/app/_components/question-card";
 
 export default function Home() {
   // Group resource counts per user.
@@ -109,7 +108,6 @@ export default function Home() {
         {mostLikedQuestion && (
           <section>
             <h2 className="text-4xl font-bold mb-4">Most Liked Question</h2>
-            <QuestionCard {...mostLikedQuestion} />
           </section>
         )}
 

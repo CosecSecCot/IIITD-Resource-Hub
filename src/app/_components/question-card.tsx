@@ -5,37 +5,39 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import users from "@/data/users"; // assuming you have user info
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, HeartCrack } from "lucide-react";
 
+export type QuestionProps = {
+  questionid: number;
+  content: string;
+  upvote: string;
+  downvote: string;
+  dateasked: string;
+  useremail: string;
+  username: string;
+  userimgurl?: string;
+};
+
 export function QuestionCard({
-  questionID,
+  questionid,
   content,
-  dateAsked,
+  dateasked,
   upvote,
   downvote,
-  userID,
-}: {
-  questionID: number;
-  content: string;
-  dateAsked: string;
-  upvote: number;
-  downvote: number;
-  userID: number;
-}) {
-  const user = users.find((u) => u.userID === userID);
-  if (!user) return null;
-
+  useremail,
+  username,
+  userimgurl,
+}: QuestionProps) {
   return (
     <Card className="cursor-pointer">
-      <Link href={`/questions/${questionID}`}>
+      <Link href={`/questions/${questionid}`}>
         <CardContent>
           <div className="flex flex-col space-y-6">
             <div className="space-y-2">
               <CardTitle className="text-lg">{content}</CardTitle>
               <CardDescription>
-                {new Date(dateAsked).toDateString()}
+                {new Date(dateasked).toDateString()}
               </CardDescription>
               <div className="flex space-x-4">
                 <div className="flex space-x-2 items-center">
@@ -50,12 +52,12 @@ export function QuestionCard({
             </div>
             <div className="flex gap-2 items-center">
               <Avatar className="w-[40px] h-[40px]">
-                <AvatarImage src="" />
+                <AvatarImage src={userimgurl} />
                 <AvatarFallback>
-                  {user.email?.slice(0, 2).toUpperCase() || "AU"}
+                  {useremail?.slice(0, 2).toUpperCase() || "AU"}
                 </AvatarFallback>
               </Avatar>
-              <span>{user.name}</span>
+              <span>{username}</span>
             </div>
           </div>
         </CardContent>

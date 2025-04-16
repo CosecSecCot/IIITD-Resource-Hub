@@ -2,21 +2,42 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
-import questions from "@/data/questions"; // this is your array
-import { QuestionCard } from "@/app/_components/question-card";
+import { QuestionCard, QuestionProps } from "@/app/_components/question-card";
 
 export const dynamic = "force-dynamic";
 
 export default function QuestionsPage() {
   const [search, setSearch] = useState("");
+  const [questions, setQuestions] = useState<QuestionProps[]>([]);
+  const [isPending, startTransition] = useTransition();
+
+  async function loadQuestions() {
+    try {
+      const res = await fetch(`/api/questions`);
+      if (!res.ok) {
+        console.error("Error fetching questions");
+        return;
+      }
+      const data = await res.json();
+      setQuestions(data);
+    } catch (err) {
+      console.error("Failed to load questions:", err);
+    }
+  }
+
+  useEffect(() => {
+    startTransition(() => {
+      loadQuestions();
+    });
+  }, []);
 
   const filteredQuestions = useMemo(() => {
     return questions.filter((q) =>
       q.content.toLowerCase().includes(search.toLowerCase()),
     );
-  }, [search]);
+  }, [questions, search]);
 
   return (
     <main className="md:w-[765px] px-10 mx-auto mt-20 mb-20">
@@ -35,9 +56,13 @@ export default function QuestionsPage() {
         </Button>
       </div>
       <div className="mt-10 space-y-6">
-        {filteredQuestions.map((q) => (
-          <QuestionCard key={q.questionID} {...q} />
-        ))}
+        {isPending ? (
+          <div>Loading...</div>
+        ) : (
+          filteredQuestions.map((q, index) => (
+            <QuestionCard key={index} {...q} />
+          ))
+        )}
       </div>
     </main>
   );
