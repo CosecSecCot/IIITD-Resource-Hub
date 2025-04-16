@@ -75,7 +75,7 @@ export default async function BlogPage({
           </Toggle>
         </div>
         <div className="space-y-[1em]">
-          {blog["content"].split("\n\n").map((para, idx) => (
+          {blog["content"].split("\n\n").map((para: string, idx: number) => (
             <p key={idx}> {para} </p>
           ))}
         </div>

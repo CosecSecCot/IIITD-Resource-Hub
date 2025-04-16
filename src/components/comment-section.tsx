@@ -173,7 +173,7 @@ export function UserComment({
   username,
   userimgurl,
   noReplies = false,
-}: UserCommentProps) {
+}: Partial<UserCommentProps>) {
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<UserCommentProps[]>([]);
   const [isPending, startTransition] = useTransition();
@@ -204,13 +204,15 @@ export function UserComment({
       <div className="flex items-start gap-4">
         <Avatar className="h-10 w-10 border">
           <AvatarImage src={userimgurl} />
-          <AvatarFallback>{useremail.slice(0, 2).toUpperCase()}</AvatarFallback>
+          <AvatarFallback>
+            {useremail?.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
         </Avatar>
         <div className="grid gap-1.5">
           <div className="flex items-center gap-2">
             <div className="font-bold">{username}</div>
             <div className="text-xs text-muted-foreground">
-              {new Date(date).toDateString()}
+              {date ? new Date(date).toDateString() : ""}
             </div>
           </div>
           <div className={`text-sm ${isdeleted ? "italic" : ""}`}>

@@ -25,14 +25,14 @@ import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 import { getClerkUserData } from "@/app/_actions/clerk";
 
-const sql = neon(process.env.DATABASE_URL!);
-
 export default async function Page({
   params,
 }: {
   params: Promise<{ userID: string }>; // userID from the URL
 }) {
   const userID = parseInt((await params).userID, 10);
+
+  const sql = neon(process.env.DATABASE_URL!);
   const user = (await sql`SELECT * FROM Users WHERE userid=${userID}`)[0];
   if (!user) {
     notFound();
@@ -49,15 +49,15 @@ export default async function Page({
     `;
   const userQuestions = questions.filter((ques) => ques.userID === userID);
 
-  let userComments = await sql`
+  const userCommentsResult = await sql`
     SELECT c.commentid, c.content, c.date, c.upvote, c.downvote, c.isdeleted,
       u.email AS useremail, u.name AS username, u.clerkuserid
     FROM Comment c
     INNER JOIN Users u ON c.userid = u.userid
     WHERE c.userid=${userID}
   `;
-  userComments = await Promise.all(
-    userComments.map(async (comment) => ({
+  const userComments = await Promise.all(
+    userCommentsResult.map(async (comment) => ({
       ...comment,
       userimgurl: (await getClerkUserData(comment["clerkuserid"]))?.imageUrl,
     })),

@@ -1,14 +1,13 @@
 import { neon } from "@neondatabase/serverless";
 import { NextRequest, NextResponse } from "next/server";
 
-const sql = neon(process.env.DATABASE_URL!);
-
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { blogID: string } },
+  { params }: { params: Promise<{ blogID: string }> },
 ) {
+  const sql = neon(process.env.DATABASE_URL!);
   try {
-    const blogID = parseInt(params.blogID, 10);
+    const blogID = parseInt((await params).blogID, 10);
     const { userID, title, content } = await request.json();
 
     // Update the blog where BlogID matches.

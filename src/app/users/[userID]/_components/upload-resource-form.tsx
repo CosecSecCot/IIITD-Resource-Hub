@@ -39,7 +39,7 @@ type ResourceFormData = z.infer<typeof resourceSchema>;
 
 interface UploadResourceFormProps {
   userID: number;
-  initialData?: ResourceFormData & { resourceID: number };
+  initialData?: Partial<ResourceFormData> & { resourceID: number };
 }
 
 export default function UploadResourceForm({

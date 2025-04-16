@@ -3,11 +3,11 @@ import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { commentID: string } },
+  _req: Request,
+  { params }: { params: Promise<{ commentID: string }> },
 ) {
   try {
-    const commentID = parseInt(params.commentID, 10);
+    const commentID = parseInt((await params).commentID, 10);
     if (isNaN(commentID)) {
       return NextResponse.json({ error: "Invalid commentID" }, { status: 400 });
     }

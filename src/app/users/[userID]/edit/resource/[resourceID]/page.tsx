@@ -1,12 +1,8 @@
 import UploadResourceForm from "@/app/users/[userID]/_components/upload-resource-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import users from "@/data/users";
-import resources from "@/data/resources";
 import { notFound } from "next/navigation";
-import resourceFiles from "@/data/resource-files";
 import { getClerkUserData } from "@/app/_actions/clerk";
 import { neon } from "@neondatabase/serverless";
-import { init } from "next/dist/compiled/webpack/webpack";
 
 export default async function Page({
   params,
@@ -38,20 +34,20 @@ export default async function Page({
     notFound();
   }
 
-  let resourceFilesForResource = await sql`
+  const resourceFilesForResource = await sql`
     SELECT * FROM ResourceFile
     WHERE resourceid = ${resourceID};
   `;
 
-  resourceFilesForResource = resourceFilesForResource.map(
+  const resourceFileurls: string[] = resourceFilesForResource.map(
     (resFile) => resFile["url"],
   );
 
-  console.log(resourceFilesForResource);
+  console.log(resourceFileurls);
 
   const initialData = {
     ...resourceToEdit,
-    resourceFiles: resourceFilesForResource,
+    resourceFiles: resourceFileurls,
     resourceID: resourceID,
   };
 

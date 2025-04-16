@@ -1,14 +1,13 @@
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
-const sql = neon(process.env.DATABASE_URL!);
-
 export async function PUT(
   req: Request,
-  { params }: { params: { resourceID: string } },
+  { params }: { params: Promise<{ resourceID: string }> },
 ) {
+  const sql = neon(process.env.DATABASE_URL!);
   try {
-    const resourceID = parseInt(params.resourceID, 10);
+    const resourceID = parseInt((await params).resourceID, 10);
     if (isNaN(resourceID)) {
       return NextResponse.json(
         { error: "Invalid resourceID" },

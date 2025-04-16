@@ -2,9 +2,8 @@ import { getClerkUserData } from "@/app/_actions/clerk";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
-const sql = neon(process.env.DATABASE_URL!);
-
 export async function POST(req: Request) {
+  const sql = neon(process.env.DATABASE_URL!);
   try {
     const {
       userID,
@@ -82,7 +81,9 @@ export async function POST(req: Request) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(req: Request) {
+  const sql = neon(process.env.DATABASE_URL!);
   try {
     let result = await sql`
       SELECT 

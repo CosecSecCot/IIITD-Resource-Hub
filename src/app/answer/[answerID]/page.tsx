@@ -58,7 +58,7 @@ export default async function AnswerPage({
           {answerComments.length === 0 ? (
             <p className="text-muted-foreground">No comments yet.</p>
           ) : (
-            <CommentSection comments={answerComments} />
+            <CommentSection comments={[]} />
           )}
         </section>
       </main>

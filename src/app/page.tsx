@@ -5,10 +5,8 @@ import resources from "@/data/resources";
 import questions from "@/data/questions";
 import comments from "@/data/comments";
 import blogs from "@/data/blogs";
-import { UserComment } from "@/components/comment-section";
 import Link from "next/link";
 import { QuestionCard } from "@/app/_components/question-card";
-import { BlogCard } from "@/app/_components/blog-card";
 
 export default function Home() {
   // Group resource counts per user.
@@ -118,14 +116,12 @@ export default function Home() {
         {mostLikedComment && (
           <section>
             <h2 className="text-4xl font-bold mb-4">Most Liked Comment</h2>
-            <UserComment comment={mostLikedComment} noReplies={false} />
           </section>
         )}
 
         {mostLikedBlog && (
           <section>
             <h2 className="text-4xl font-bold mb-4">Most Liked Blog</h2>
-            <BlogCard {...mostLikedBlog} />
           </section>
         )}
       </main>
